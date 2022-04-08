@@ -1,28 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Graph
-// [input nodes], [output nodes]
-
-// Node
-// Type, Color, Phase, Edges
-
-// Type - emum: hadamard, spider, input, output
-// Color - enum: green, red, none
-// Phase - float
-// Edges - [* node]
-
-typedef enum {hadamard, spider, input, output} TYPE;
-typedef enum {green, red} COLOR;
-
-typedef struct Node
-{
-    float phase;
-    TYPE type;
-    COLOR color;
-    NODE *edges;
-} Node;
-
 Circuit *algorithm_4(Graph zx_diagram)
 {
     Circuit circuit;
