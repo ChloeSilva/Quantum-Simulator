@@ -8,31 +8,30 @@ typedef struct ZXGraph
 {
     int qubit_count;
     int node_count;
-    struct Node *nodes;
-    struct Node **inputs;
-    struct Node **outputs;
+    int *inputs;
+    int *outputs;
+    struct Node **nodes;
 } ZXGraph;
 
 typedef struct Node
 {
     int id;
     int edge_count;
+    int *edges;
     Type type;
     Color color;
     float phase;
-    struct Node **edges;
 } Node;
 
 ZXGraph *initialise_graph(int);
-void free_graph(ZXGraph *);
-Node *initialise_hadamard();
-Node *initialise_spider(Color, float);
 Node *initialise_input();
 Node *initialise_output();
+Node *initialise_hadamard(ZXGraph *);
+Node *initialise_spider(Color, float, ZXGraph *);
 Node *get_node(int, ZXGraph *);
-void free_node(Node *);
-void insert_node(Node *, Node **, ZXGraph *);
-void add_node(Node *, Node **, int, ZXGraph *);
+void add_edge(Node *, Node *);
+void remove_edge(Node *, Node *);
+void insert_node(Node *, Node *, Node *);
 void apply_antipod();
 void apply_fusion();
 void apply_color_change();
@@ -43,5 +42,7 @@ void apply_bialgebra();
 void apply_complementation();
 void apply_pivoting();
 void apply_boundary();
+void free_node(Node *);
+void free_graph(ZXGraph *);
 
 #endif
