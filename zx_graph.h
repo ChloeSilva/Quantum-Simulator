@@ -32,7 +32,7 @@ Node *initialise_output();
 Node *get_node(int, ZXGraph *);
 void free_node(Node *);
 void insert_node(Node *, Node **, ZXGraph *);
-void add_node(Node *, Node *, int, ZXGraph *);
+void add_node(Node *, Node **, int, ZXGraph *);
 void apply_antipod();
 void apply_fusion();
 void apply_color_change();

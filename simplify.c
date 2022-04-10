@@ -50,27 +50,28 @@
 int main()
 {
     ZXGraph *graph;
-    Node *node;
+    Node *hadamard, *spider, *spider2;
     Node *in_out[2];
+    Node *hadamard_spider[2];
 
     graph = initialise_graph(1);
-    node = initialise_hadamard();
+    hadamard = initialise_hadamard();
+    spider = initialise_spider(RED, 1.2);
+    spider2 = initialise_spider(GREEN, 1.0);
 
     in_out[0] = graph -> inputs[0];
     in_out[1] = graph -> outputs[0];
-
-    for(int i=0; i<2; i++) {
-        printf("Graph contains node %d with edges ", (graph -> nodes)[i].id);
-        for(int j=0; j < graph -> nodes[i].edge_count; j++) {
-            printf("%d ", graph -> nodes[i].edges[j] -> id);
-        }
-        printf("\n");
-    }
     
-    insert_node(node, in_out, graph);
+    insert_node(hadamard, in_out, graph);
+    add_node(spider, in_out, 2, graph);
 
-    for(int i=0; i<3; i++) {
-        printf("Graph contains node %d with edges ", (graph -> nodes)[i].id);
+    hadamard_spider[0] = get_node(2, graph);
+    hadamard_spider[1] = get_node(3, graph);
+
+    add_node(spider2, hadamard_spider, 2, graph);
+
+    for(int i=0; i<4; i++) {
+        printf("Graph contains node %d with edges ", graph -> nodes[i].id);
         for(int j=0; j < graph -> nodes[i].edge_count; j++) {
             printf("%d ", graph -> nodes[i].edges[j] -> id);
         }

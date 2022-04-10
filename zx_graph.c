@@ -188,38 +188,45 @@ void insert_node(Node *node, Node **edges, ZXGraph *graph)
 
 }
 
-// void add_node(Node *node, Node *edges, int num_edges, ZXGraph *graph)
-// {
-//     Node *new_edges;
-//     Node *new_nodes;
-//     int new_edge_count;
+void add_node(Node *node, Node **edges, int num_edges, ZXGraph *graph)
+{
+    Node **new_edges;
+    Node *new_nodes;
+    int new_edge_count;
 
-//     if(node -> edge_count)
-//         free(node -> edges);
+    if(node -> edge_count)
+        free(node -> edges);
 
-//     new_edges = (Node *) malloc(sizeof(Node)*num_edges);
+    new_edges = (Node **) malloc(sizeof(Node *) * num_edges);
     
-//     node -> edges = new_edges;
-//     node -> edge_count = num_edges;
-//     node -> id = graph -> node_count;
+    node -> edges = new_edges;
+    node -> edge_count = num_edges;
+    node -> id = graph -> node_count;
 
-//     for(int i=0; i<num_edges; i++)
-//         node -> edges[i] = edges[i];
+    for(int i=0; i<num_edges; i++)
+        node -> edges[i] = edges[i];
 
-//     for(int i=0; i<num_edges; i++) {
-//         new_edge_count = ++edges[i].edge_count;
-//         new_edges = (Node *) malloc(sizeof(Node) * new_edge_count);
-//         memcpy(new_edges, edges[i].edges, new_edge_count - 1);
-//         new_edges[new_edge_count] = *node;
-//         free(edges[i].edges);
-//         edges[i].edges = new_edges;
-//         printf("added edge %d to ");
-//     }
+    for(int i=0; i<num_edges; i++) {
+        printf("adjusting node %d\n", edges[i]->id);
+        new_edge_count = edges[i] -> edge_count + 1;
+        new_edges = (Node **) malloc(sizeof(Node *) * new_edge_count);
+        
+        for(int j=0; j<edges[i]->edge_count; j++) {
+            new_edges[j] = edges[i]->edges[j];
+        }
+        
+        new_edges[new_edge_count-1] = node;
+        
+        free(edges[i] -> edges);
+        
+        get_node(edges[i]->id, graph) -> edges = new_edges;
+        get_node(edges[i]->id, graph) -> edge_count = new_edge_count;
+    }
 
-//     graph -> node_count++;
-//     new_nodes = (Node *) malloc(sizeof(Node) * graph -> node_count);
-//     memcpy(new_nodes, graph -> nodes, sizeof(Node) * (graph ->  node_count - 1));
-//     free(graph -> nodes);
-//     new_nodes[graph -> node_count - 1] = *node;
-//     graph -> nodes = new_nodes;
-// }
+    graph -> node_count++;
+    new_nodes = (Node *) malloc(sizeof(Node) * graph -> node_count);
+    memcpy(new_nodes, graph -> nodes, sizeof(Node) * (graph ->  node_count - 1));
+    free(graph -> nodes);
+    new_nodes[graph -> node_count - 1] = *node;
+    graph -> nodes = new_nodes;
+}
