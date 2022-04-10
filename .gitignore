@@ -53,3 +53,8 @@ dkms.conf
 
 # Mac files
 *.DS_Store
+
+# Project Executables
+simulate
+simplify
+zx_graph_tests
