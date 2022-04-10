@@ -32,16 +32,6 @@ Node *get_node(int, ZXGraph *);
 void add_edge(Node *, Node *);
 void remove_edge(Node *, Node *);
 void insert_node(Node *, Node *, Node *);
-void apply_antipod();
-void apply_fusion();
-void apply_color_change();
-void apply_id1();
-void apply_id2();
-void apply_copy();
-void apply_bialgebra();
-void apply_complementation();
-void apply_pivoting();
-void apply_boundary();
 void free_node(Node *);
 void free_graph(ZXGraph *);
 

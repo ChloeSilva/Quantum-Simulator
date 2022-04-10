@@ -6,9 +6,11 @@
 
 void test_initialise_graph()
 {
+    printf("Testsing initialise_graph: ");
+
     ZXGraph *graph;
     Node *node;
-
+    
     graph = initialise_graph(2);
 
     // test graph
@@ -44,10 +46,14 @@ void test_initialise_graph()
     assert(node->type == OUTPUT);
 
     free_graph(graph);
+    
+    printf("Pass\n");
 }
 
 void test_initialise_input()
 {
+    printf("Testsing initialise_input: ");
+
     Node *input;
 
     input = initialise_input();
@@ -57,10 +63,14 @@ void test_initialise_input()
     assert(input->type == INPUT);
 
     free(input);
+
+    printf("Pass\n");
 }
 
 void test_initialise_output()
 {
+    printf("Testsing initialise_output: ");
+
     Node *output;
 
     output = initialise_output();
@@ -70,10 +80,14 @@ void test_initialise_output()
     assert(output->type == OUTPUT);
 
     free(output);
+
+    printf("Pass\n");
 }
 
 void test_initialise_hadamard()
 {
+    printf("Testsing initialise_hadamard: ");
+
     ZXGraph *graph;
     Node *hadamard;
 
@@ -91,10 +105,14 @@ void test_initialise_hadamard()
     assert(get_node(2, graph) == hadamard);
 
     free_graph(graph);
+
+    printf("Pass\n");
 }
 
 void test_initialise_spider()
 {
+    printf("Testsing initialise_spider: ");
+
     ZXGraph *graph;
     Node *spider;
 
@@ -114,10 +132,14 @@ void test_initialise_spider()
     assert(get_node(2, graph) == spider);
 
     free_graph(graph);
+
+    printf("Pass\n");
 }
 
 void test_get_node()
 {
+    printf("Testsing get_node: ");
+
     ZXGraph *graph;
     Node *node_0;
     Node *node_1;
@@ -131,10 +153,14 @@ void test_get_node()
     assert(node_1->id == 1);
 
     free_graph(graph);
+
+    printf("Pass\n");
 }
 
 void test_add_edge()
 {
+    printf("Testsing add_edge: ");
+
     ZXGraph *graph;
     Node *node;
     Node *input;
@@ -153,10 +179,14 @@ void test_add_edge()
     assert(input->edges[1] == node->id);
 
     free_graph(graph);
+
+    printf("Pass\n");
 }
 
 void test_remove_edge()
 {
+    printf("Testsing remove_edge: ");
+
     ZXGraph *graph;
     Node *input, *output, *node;
 
@@ -182,10 +212,14 @@ void test_remove_edge()
     assert(node->edges[1] == output->id);
 
     free_graph(graph);
+
+    printf("Pass\n");
 }
 
 void test_insert_node()
 {
+    printf("Testsing insert_node: ");
+
     ZXGraph *graph;
     Node *node, *input, *output;
 
@@ -209,6 +243,8 @@ void test_insert_node()
     assert(node->edges[1] == output->id);
 
     free_graph(graph);
+
+    printf("Pass\n");
 }
 
 int main()

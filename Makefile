@@ -31,9 +31,16 @@ simulate: simulate.c
 zx_graph.o: zx_graph.c zx_graph.h
 	$(CC) -c $< $(CFLAGS)
 
-# zx_graph_tests
-zx_graph_tests: zx_graph_tests.c zx_graph.o
-	$(CC) -o zx_graph_tests $^ $(CFLAGS) $(CLIBS)
+zx_graph_rules.o: zx_graph_rules.c zx_graph_rules.h zx_graph.o
+	$(CC) -c $< $(CFLAGS)
+
+# test_zx_graph
+test_zx_graph: test_zx_graph.c zx_graph.o
+	$(CC) -o test_zx_graph $^ $(CFLAGS) $(CLIBS)
+
+# test_zx_graph_rules
+test_zx_graph_rules: test_zx_graph_rules.c zx_graph_rules.o zx_graph.o
+	$(CC) -o test_zx_graph_rules $^ $(CFLAGS) $(CLIBS)
 
 # simplify
 simplify: simplify.c zx_graph.o
