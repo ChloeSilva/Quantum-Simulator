@@ -159,7 +159,7 @@ void test_get_node()
 
 void test_change_color()
 {
-    printf("Testing change color: ");
+    printf("Testing change_color: ");
 
     ZXGraph *graph = initialise_graph(1);
     Node *red_spider = initialise_spider(RED, 1.2f, graph);
@@ -175,6 +175,22 @@ void test_change_color()
     // test green spider
     assert(green_spider->color == RED);
     assert(green_spider->phase == 1.2f);
+
+    printf("Pass\n");
+}
+
+void test_change_phase()
+{
+    printf("Testing change_phase: ");
+
+    ZXGraph *graph = initialise_graph(1);
+    Node *spider = initialise_spider(RED, 1.2f, graph);
+
+    change_phase(spider, 0.8f);
+
+    // test spider
+    assert(spider->color == RED);
+    assert(spider->phase == 0.8f);
 
     printf("Pass\n");
 }
@@ -278,6 +294,7 @@ int main()
     test_initialise_spider();
     test_get_node();
     test_change_color();
+    test_change_phase();
     test_add_edge();
     test_remove_edge();
     test_insert_node();
