@@ -5,6 +5,61 @@
 #include <stdlib.h>
 #include <assert.h>
 
+void test_apply_fusion()
+{
+    printf("Testing apply_fusion: ");
+
+    ZXGraph *graph = initialise_graph(2);
+    Node *input_1 = get_node(graph->inputs[0], graph);
+    Node *input_2 = get_node(graph->inputs[1], graph);
+    Node *output_1 = get_node(graph->outputs[0], graph);
+    Node *output_2 = get_node(graph->outputs[1], graph);
+    Node *spider_1 = initialise_spider(RED, 0.8f, graph);
+    Node *spider_2 = initialise_spider(RED, 1.3f, graph);
+    insert_node(spider_1, input_1, output_1);
+    insert_node(spider_2, input_2, output_2);
+    add_edge(spider_1, spider_2);
+    apply_fusion(spider_1, spider_2, graph);
+
+    // test graph
+    assert(graph->num_qubits == 2);
+    assert(graph->num_nodes == 5);
+    assert(graph->id_counter == 6);
+
+    // test spider
+    assert(spider_1->id == 4);
+    assert(spider_1->edge_count == 4);
+    assert(spider_1->edges[0] == input_1->id);
+    assert(spider_1->edges[1] == output_1->id);
+    assert(spider_1->edges[2] == input_2->id);
+    assert(spider_1->edges[3] == output_2->id);
+    assert(spider_1->type == SPIDER);
+    assert(spider_1->color == RED);
+    assert(spider_1->phase == 2.1f);
+
+    // test inputs
+    assert(input_1->id == 0);
+    assert(input_1->edge_count == 1);
+    assert(input_1->edges[0] == spider_1->id);
+    assert(input_1->type == INPUT);
+    assert(input_2->id == 2);
+    assert(input_2->edge_count == 1);
+    assert(input_2->edges[0] == spider_1->id);
+    assert(input_2->type == INPUT);
+
+    // test outputs
+    assert(output_1->id == 1);
+    assert(output_1->edge_count == 1);
+    assert(output_1->edges[0] == spider_1->id);
+    assert(output_1->type == OUTPUT);
+    assert(output_2->id == 3);
+    assert(output_2->edge_count == 1);
+    assert(output_2->edges[0] == spider_1->id);
+    assert(output_2->type == OUTPUT);
+
+    printf("Pass\n");
+}
+
 void test_apply_color_change()
 {
     printf("Testing apply_color_change: ");
@@ -138,6 +193,7 @@ void test_apply_id2()
 
 int main()
 {
+    test_apply_fusion();
     test_apply_color_change();
     test_apply_id1();
     test_apply_id2();
