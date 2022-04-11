@@ -5,9 +5,9 @@
 
 void apply_antipod();
 void apply_fusion();
-void apply_color_change();
+void apply_color_change(Node *, ZXGraph *);
 void apply_id1(Node *, Node *, Color, ZXGraph *);
-void apply_id2();
+void apply_id2(Node *, Node *, ZXGraph *);
 void apply_copy();
 void apply_bialgebra();
 void apply_complementation();

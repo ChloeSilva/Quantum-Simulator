@@ -187,13 +187,33 @@ Node *get_node(int id, ZXGraph *graph)
     exit(EXIT_FAILURE);
 }
 
+void change_color(Node *node)
+{
+    if(node->type != SPIDER) {
+        fprintf(stderr, "error: can only change color of spider node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    node->color = node->color == RED ? GREEN : RED;
+}
+
+void change_phase(Node *node, float phase)
+{
+    if(node->type != SPIDER) {
+        fprintf(stderr, "error: can only change color of spider node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    node->phase = phase;
+}
+
 void add_edge(Node *node_1, Node *node_2)
 {
     int *new_edges;
 
     // Add node_2 to node_1's edge list
     new_edges = (int *) malloc(sizeof(int)*(node_1->edge_count+1));
-    new_edges[node_2->edge_count] = node_2->id;
+    new_edges[node_1->edge_count] = node_2->id;
     if(node_1->edge_count) {
         memcpy(new_edges, node_1->edges, sizeof(int)*node_1->edge_count);
         free(node_1->edges);

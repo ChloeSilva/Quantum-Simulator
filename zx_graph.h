@@ -29,6 +29,8 @@ Node *initialise_output();
 Node *initialise_hadamard(ZXGraph *);
 Node *initialise_spider(Color, float, ZXGraph *);
 Node *get_node(int, ZXGraph *);
+void change_color(Node *);
+void change_phase(Node *, float);
 void add_edge(Node *, Node *);
 void remove_edge(Node *, Node *);
 void insert_node(Node *, Node *, Node *);
