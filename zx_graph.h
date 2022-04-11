@@ -6,8 +6,9 @@ typedef enum {GREEN, RED} Color;
 
 typedef struct ZXGraph
 {
-    int qubit_count;
-    int node_count;
+    int num_qubits;
+    int num_nodes;
+    int id_counter;
     int *inputs;
     int *outputs;
     struct Node **nodes;
@@ -29,12 +30,13 @@ Node *initialise_output();
 Node *initialise_hadamard(ZXGraph *);
 Node *initialise_spider(Color, float, ZXGraph *);
 Node *get_node(int, ZXGraph *);
+void free_node(Node *);
+void free_graph(ZXGraph *);
 void change_color(Node *);
 void change_phase(Node *, float);
 void add_edge(Node *, Node *);
 void remove_edge(Node *, Node *);
+void remove_node(Node *, ZXGraph *);
 void insert_node(Node *, Node *, Node *);
-void free_node(Node *);
-void free_graph(ZXGraph *);
 
 #endif

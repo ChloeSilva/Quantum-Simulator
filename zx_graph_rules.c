@@ -5,6 +5,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+void apply_fusion(Node *node_1, Node *node_2, ZXGraph *graph)
+{
+    if(node_1->type != SPIDER || node_2->type != SPIDER) {
+        fprintf(stderr, "error: can only fuse spiders.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(node_1->color != node_2->color) {
+        fprintf(stderr, "error: can only fuse spiders of the same color.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int node_2_edge_count = node_2->edge_count;
+    int *node_2_edges = (int *) malloc(sizeof(int)*node_2_edge_count);
+    memcpy(node_2_edges, node_2->edges, sizeof(int)*node_2_edge_count);
+}
+
 void apply_color_change(Node *node, ZXGraph *graph)
 {
     int edge_count = node->edge_count;

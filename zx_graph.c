@@ -43,8 +43,9 @@ ZXGraph *initialise_graph(int size)
     }
 
     // set member data
-    graph->qubit_count = size;
-    graph->node_count = 0;
+    graph->num_qubits = size;
+    graph->num_nodes = 0;
+    graph->id_counter = 0;
     graph->inputs = inputs;
     graph->outputs = outputs;
     graph->nodes = nodes;
@@ -54,20 +55,22 @@ ZXGraph *initialise_graph(int size)
     {
         // initialise and add input node
         input_node = initialise_input();
-        input_node->id = graph->node_count;
-        nodes[graph->node_count] = input_node;
+        input_node->id = graph->id_counter;
+        nodes[graph->num_nodes] = input_node;
         inputs[i] = input_node->id;
-        graph->node_count++;
+        graph->num_nodes++;
+        graph->id_counter++;
         
         // initialise and add output node
         output_node = initialise_output();
-        output_node->id = graph->node_count;
-        nodes[graph->node_count] = output_node;
+        output_node->id = graph->id_counter;
+        nodes[graph->num_nodes] = output_node;
         outputs[i] = output_node->id;
-        graph->node_count++;
+        graph->num_nodes++;
+        graph->id_counter++;
 
         // connect input and output
-        add_edge(nodes[graph->node_count-2], nodes[graph->node_count-1]);
+        add_edge(nodes[graph->num_nodes-2], nodes[graph->num_nodes-1]);
     }
 
     return graph;
@@ -122,20 +125,21 @@ Node *initialise_hadamard(ZXGraph *graph)
     }
 
     // Allocate new array of node pointers for graph
-    nodes = (Node **) malloc(sizeof(Node *)*graph->node_count+1);
+    nodes = (Node **) malloc(sizeof(Node *)*graph->num_nodes+1);
     if(!nodes) {
         fprintf(stderr, "error: unable to initialise node pointers.\n");
         exit(EXIT_FAILURE);
     }
 
-    memcpy(nodes, graph->nodes, sizeof(Node *)*graph->node_count);
+    memcpy(nodes, graph->nodes, sizeof(Node *)*graph->num_nodes);
     free(graph->nodes);
-    nodes[graph->node_count] = hadamard;
+    nodes[graph->num_nodes] = hadamard;
     graph->nodes = nodes;
-    graph->node_count++;
+    graph->num_nodes++;
+    graph->id_counter++;
 
     // set member data
-    hadamard->id = graph->node_count-1;
+    hadamard->id = graph->id_counter-1;
     hadamard->edge_count = 0;
     hadamard->type = HADAMARD;
     
@@ -155,20 +159,21 @@ Node *initialise_spider(Color color, float phase, ZXGraph *graph)
     }
 
     // Allocate new array of node pointers for graph
-    nodes = (Node **) malloc(sizeof(Node *)*graph->node_count+1);
+    nodes = (Node **) malloc(sizeof(Node *)*graph->num_nodes+1);
     if(!nodes) {
         fprintf(stderr, "error: unable to initialise new nodes.\n");
         exit(EXIT_FAILURE);
     }
 
-    memcpy(nodes, graph->nodes, sizeof(Node *)*graph->node_count);
+    memcpy(nodes, graph->nodes, sizeof(Node *)*graph->num_nodes);
     free(graph->nodes);
-    nodes[graph->node_count] = spider;
+    nodes[graph->num_nodes] = spider;
     graph->nodes = nodes;
-    graph->node_count++;
+    graph->num_nodes++;
+    graph->id_counter++;
 
     // set member data
-    spider->id = graph->node_count-1;
+    spider->id = graph->id_counter-1;
     spider->edge_count = 0;
     spider->type = SPIDER;
     spider->color = color;
@@ -179,12 +184,31 @@ Node *initialise_spider(Color color, float phase, ZXGraph *graph)
 
 Node *get_node(int id, ZXGraph *graph)
 {
-    for(int i=0; i<graph->node_count; i++)
+    for(int i=0; i<graph->num_nodes; i++)
         if(graph->nodes[i]->id == id)
             return graph->nodes[i];
 
     fprintf(stderr, "error: node %d not found.\n", id);
     exit(EXIT_FAILURE);
+}
+
+void free_node(Node *node)
+{
+    if(node->edge_count)
+        free(node->edges);
+
+    free(node);
+}
+
+void free_graph(ZXGraph *graph)
+{
+    for(int i=0; i<graph->num_nodes; i++)
+        free_node(get_node(i, graph));
+    
+    free(graph->nodes);
+    free(graph->inputs);
+    free(graph->outputs);
+    free(graph);
 }
 
 void change_color(Node *node)
@@ -275,28 +299,36 @@ void remove_edge(Node *node_1, Node *node_2)
     node_2->edge_count--;
 }
 
+void remove_node(Node *node, ZXGraph *graph)
+{
+    // Remove edges to all connected nodes
+    int edge_count = node->edge_count;
+    int *edges = (int *) malloc(sizeof(int)*edge_count);
+    memcpy(edges, node->edges, sizeof(int)*edge_count);
+
+    for(int i=0; i<edge_count; i++)
+        remove_edge(node, get_node(edges[i], graph));
+
+    free(edges);
+
+    // Update graph
+    Node **nodes = (Node **) malloc(sizeof(Node *)*(graph->num_nodes-1));
+    int j = 0;
+    for(int i=0; i<graph->num_nodes; i++) {
+        if(graph->nodes[i] != node) {
+            nodes[j] = graph->nodes[i];
+            j++;
+        }
+    }
+    free(graph->nodes);
+    free(node);
+    graph->nodes = nodes;
+    graph->num_nodes--;
+}
+
 void insert_node(Node *node, Node *left_node, Node *right_node)
 {
     add_edge(node, left_node);
     add_edge(node, right_node);
     remove_edge(left_node, right_node);
-}
-
-void free_node(Node *node)
-{
-    if(node->edge_count)
-        free(node->edges);
-
-    free(node);
-}
-
-void free_graph(ZXGraph *graph)
-{
-    for(int i=0; i<graph->node_count; i++)
-        free_node(get_node(i, graph));
-    
-    free(graph->nodes);
-    free(graph->inputs);
-    free(graph->outputs);
-    free(graph);
 }

@@ -14,8 +14,8 @@ void test_initialise_graph()
     graph = initialise_graph(2);
 
     // test graph
-    assert(graph->qubit_count == 2);
-    assert(graph->node_count == 4);
+    assert(graph->num_qubits == 2);
+    assert(graph->num_nodes == 4);
 
     // test first input node
     node = get_node(graph->inputs[0], graph);
@@ -100,8 +100,8 @@ void test_initialise_hadamard()
     assert(hadamard->type == HADAMARD);
 
     // test graph
-    assert(graph->qubit_count == 1);
-    assert(graph->node_count = 3);
+    assert(graph->num_qubits == 1);
+    assert(graph->num_nodes = 3);
     assert(get_node(2, graph) == hadamard);
 
     free_graph(graph);
@@ -127,8 +127,8 @@ void test_initialise_spider()
     assert(spider->phase == 1.5);
 
     // test graph
-    assert(graph->qubit_count == 1);
-    assert(graph->node_count == 3);
+    assert(graph->num_qubits == 1);
+    assert(graph->num_nodes == 3);
     assert(get_node(2, graph) == spider);
 
     free_graph(graph);
@@ -176,6 +176,8 @@ void test_change_color()
     assert(green_spider->color == RED);
     assert(green_spider->phase == 1.2f);
 
+    free(graph);
+
     printf("Pass\n");
 }
 
@@ -191,6 +193,8 @@ void test_change_phase()
     // test spider
     assert(spider->color == RED);
     assert(spider->phase == 0.8f);
+
+    free(graph);
 
     printf("Pass\n");
 }
@@ -254,6 +258,35 @@ void test_remove_edge()
     printf("Pass\n");
 }
 
+void test_remove_node()
+{
+    printf("Testsing remove_node: ");
+
+    ZXGraph *graph = initialise_graph(1);
+    Node *node = initialise_hadamard(graph);
+    Node *input = get_node(graph->inputs[0], graph);
+    Node *output = get_node(graph->outputs[0], graph);
+    insert_node(node, input, output);
+    remove_node(node, graph);
+
+    // test graph
+    assert(graph->num_qubits == 1);
+    assert(graph->num_nodes == 2);
+    assert(graph->id_counter == 3);
+
+    // test input node
+    assert(input->id == 0);
+    assert(input->edge_count == 0);
+    assert(input->type == INPUT);
+
+    // test output node
+    assert(output->id == 1);
+    assert(output->edge_count == 0);
+    assert(output->type == OUTPUT);
+
+    printf("Pass\n");
+}
+
 void test_insert_node()
 {
     printf("Testsing insert_node: ");
@@ -297,5 +330,6 @@ int main()
     test_change_phase();
     test_add_edge();
     test_remove_edge();
+    test_remove_node();
     test_insert_node();
 }
