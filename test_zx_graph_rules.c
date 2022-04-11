@@ -29,10 +29,10 @@ void test_apply_fusion()
     // test spider
     assert(spider_1->id == 4);
     assert(spider_1->edge_count == 4);
-    assert(spider_1->edges[0] == input_1->id);
-    assert(spider_1->edges[1] == output_1->id);
-    assert(spider_1->edges[2] == input_2->id);
-    assert(spider_1->edges[3] == output_2->id);
+    assert(is_connected(spider_1, input_1));
+    assert(is_connected(spider_1, output_1));
+    assert(is_connected(spider_1, input_2));
+    assert(is_connected(spider_1, output_2));
     assert(spider_1->type == SPIDER);
     assert(spider_1->color == RED);
     assert(spider_1->phase == 2.1f);
@@ -40,22 +40,24 @@ void test_apply_fusion()
     // test inputs
     assert(input_1->id == 0);
     assert(input_1->edge_count == 1);
-    assert(input_1->edges[0] == spider_1->id);
+    assert(is_connected(input_1, spider_1));
     assert(input_1->type == INPUT);
     assert(input_2->id == 2);
     assert(input_2->edge_count == 1);
-    assert(input_2->edges[0] == spider_1->id);
+    assert(is_connected(input_2, spider_1));
     assert(input_2->type == INPUT);
 
     // test outputs
     assert(output_1->id == 1);
     assert(output_1->edge_count == 1);
-    assert(output_1->edges[0] == spider_1->id);
+    assert(is_connected(output_1, spider_1));
     assert(output_1->type == OUTPUT);
     assert(output_2->id == 3);
     assert(output_2->edge_count == 1);
-    assert(output_2->edges[0] == spider_1->id);
+    assert(is_connected(output_2, spider_1));
     assert(output_2->type == OUTPUT);
+
+    free_graph(graph);
 
     printf("Pass\n");
 }
@@ -80,8 +82,8 @@ void test_apply_color_change()
     // test spider
     assert(spider->id == 2);
     assert(spider->edge_count == 2);
-    assert(spider->edges[0] == hadamard_1->id);
-    assert(spider->edges[1] == hadamard_2->id);
+    assert(is_connected(spider, hadamard_1));
+    assert(is_connected(spider, hadamard_2));
     assert(spider->type == SPIDER);
     assert(spider->color == GREEN);
     assert(spider->phase == 1.2f);
@@ -89,26 +91,28 @@ void test_apply_color_change()
     // test hadamard 1
     assert(hadamard_1->id == 3);
     assert(hadamard_1->edge_count == 2);
-    assert(hadamard_1->edges[0] == spider->id);
-    assert(hadamard_1->edges[1] == input->id);
+    assert(is_connected(hadamard_1, spider));
+    assert(is_connected(hadamard_1, input));
     assert(hadamard_1->type == HADAMARD);
 
     // test hadamard 2
     assert(hadamard_2->id == 4);
     assert(hadamard_2->edge_count == 2);
-    assert(hadamard_2->edges[0] == spider->id);
-    assert(hadamard_2->edges[1] == output->id);
+    assert(is_connected(hadamard_2, spider));
+    assert(is_connected(hadamard_2, output));
     assert(hadamard_2->type == HADAMARD);
 
     // test input
     assert(input->edge_count == 1);
-    assert(input->edges[0] == hadamard_1->id);
+    assert(is_connected(input, hadamard_1));
     assert(input->type == INPUT);
 
     // test output
     assert(output->edge_count == 1);
-    assert(output->edges[0] == hadamard_2->id);
+    assert(is_connected(output, hadamard_2));
     assert(output->type == OUTPUT);
+
+    free_graph(graph);
 
     printf("Pass\n");
 }
@@ -130,21 +134,23 @@ void test_apply_id1()
     // test spider
     assert(spider->id == 2);
     assert(spider->edge_count == 2);
-    assert(spider->edges[0] == input->id);
-    assert(spider->edges[1] == output->id);
+    assert(is_connected(spider, input));
+    assert(is_connected(spider, output));
     assert(spider->type == SPIDER);
     assert(spider->color == RED);
     assert(spider->phase == 0.0);
 
     // test input
     assert(input->edge_count == 1);
-    assert(input->edges[0] == spider->id);
+    assert(is_connected(input, spider));
     assert(input->type == INPUT);
     
     // test output
     assert(output->edge_count == 1);
-    assert(output->edges[0] == spider->id);
+    assert(is_connected(output, spider));
     assert(output->type == OUTPUT);
+
+    free_graph(graph);
 
     printf("Pass\n");
 }
@@ -167,26 +173,28 @@ void test_apply_id2()
     // test hadamard 1
     assert(hadamard_1->id == 2);
     assert(hadamard_1->edge_count == 2);
-    assert(hadamard_1->edges[0] == input->id);
-    assert(hadamard_1->edges[1] == hadamard_2->id);
+    assert(is_connected(hadamard_1, input));
+    assert(is_connected(hadamard_1, hadamard_2));
     assert(hadamard_1->type == HADAMARD);
 
     // test hadamard 2
     assert(hadamard_2->id == 3);
     assert(hadamard_2->edge_count == 2);
-    assert(hadamard_2->edges[0] == hadamard_1->id);
-    assert(hadamard_2->edges[1] == output->id);
+    assert(is_connected(hadamard_2, hadamard_1));
+    assert(is_connected(hadamard_2, output));
     assert(hadamard_2->type == HADAMARD);
 
     // test input
     assert(input->edge_count == 1);
-    assert(input->edges[0] == hadamard_1->id);
+    assert(is_connected(input, hadamard_1));
     assert(input->type == INPUT);
     
     // test output
     assert(output->edge_count == 1);
-    assert(output->edges[0] == hadamard_2->id);
+    assert(is_connected(output, hadamard_2));
     assert(output->type == OUTPUT);
+
+    free_graph(graph);
 
     printf("Pass\n");
 }

@@ -53,6 +53,7 @@ void apply_color_change(Node *node, ZXGraph *graph)
 
         insert_node(hadamard, node, neighbour);
     }
+    free(edges);
 
     change_color(node);
 }
