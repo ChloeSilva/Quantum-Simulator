@@ -203,7 +203,7 @@ void free_node(Node *node)
 void free_graph(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++)
-        free_node(get_node(i, graph));
+        free_node(graph->nodes[i]);
     
     free(graph->nodes);
     free(graph->inputs);
@@ -273,29 +273,37 @@ void remove_edge(Node *node_1, Node *node_2)
     }
 
     // Remove node_2 from node_1's edge list
-    new_edges = (int *) malloc(sizeof(int)*(node_1->edge_count-1));
-    j = 0;
-    for(i=0; i<node_1->edge_count; i++) {
-        if(node_1->edges[i] != node_2->id) {
-            new_edges[j] = node_1->edges[i];
-            j++;
+    if(node_1->edge_count > 1) {
+        new_edges = (int *) malloc(sizeof(int)*(node_1->edge_count-1));
+        j = 0;
+        for(i=0; i<node_1->edge_count; i++) {
+            if(node_1->edges[i] != node_2->id) {
+                new_edges[j] = node_1->edges[i];
+                j++;
+            }
         }
+        free(node_1->edges);
+        node_1->edges = new_edges;
+    } else {
+        free(node_1->edges);
     }
-    free(node_1->edges);
-    node_1->edges = new_edges;
     node_1->edge_count--;
 
     // Remove node_1 from node_2's edge list
-    new_edges = (int *) malloc(sizeof(int)*(node_2->edge_count-1));
-    j = 0;
-    for(i=0; i<node_2->edge_count; i++) {
-        if(node_2->edges[i] != node_1->id) {
-            new_edges[j] = node_2->edges[i];
-            j++;
+    if(node_2->edge_count > 1) {
+        new_edges = (int *) malloc(sizeof(int)*(node_2->edge_count-1));
+        j = 0;
+        for(i=0; i<node_2->edge_count; i++) {
+            if(node_2->edges[i] != node_1->id) {
+                new_edges[j] = node_2->edges[i];
+                j++;
+            }
         }
+        free(node_2->edges);
+        node_2->edges = new_edges;
+    } else {
+        free(node_2->edges);
     }
-    free(node_2->edges);
-    node_2->edges = new_edges;
     node_2->edge_count--;
 }
 
@@ -321,7 +329,7 @@ void remove_node(Node *node, ZXGraph *graph)
         }
     }
     free(graph->nodes);
-    free(node);
+    free_node(node);
     graph->nodes = nodes;
     graph->num_nodes--;
 }

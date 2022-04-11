@@ -176,7 +176,7 @@ void test_change_color()
     assert(green_spider->color == RED);
     assert(green_spider->phase == 1.2f);
 
-    free(graph);
+    free_graph(graph);
 
     printf("Pass\n");
 }
@@ -194,7 +194,7 @@ void test_change_phase()
     assert(spider->color == RED);
     assert(spider->phase == 0.8f);
 
-    free(graph);
+    free_graph(graph);
 
     printf("Pass\n");
 }
@@ -283,6 +283,8 @@ void test_remove_node()
     assert(output->id == 1);
     assert(output->edge_count == 0);
     assert(output->type == OUTPUT);
+
+    free_graph(graph);
 
     printf("Pass\n");
 }
