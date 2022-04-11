@@ -38,5 +38,6 @@ void add_edge(Node *, Node *);
 void remove_edge(Node *, Node *);
 void remove_node(Node *, ZXGraph *);
 void insert_node(Node *, Node *, Node *);
+int is_connected(Node *, Node *);
 
 #endif

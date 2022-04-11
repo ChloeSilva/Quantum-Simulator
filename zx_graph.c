@@ -340,3 +340,12 @@ void insert_node(Node *node, Node *left_node, Node *right_node)
     add_edge(node, right_node);
     remove_edge(left_node, right_node);
 }
+
+int is_connected(Node *node_1, Node *node_2)
+{
+    for(int i=0; i<node_1->edge_count; i++)
+        if(node_1->edges[i] == node_2->id)
+            return true;
+
+    return false;
+}

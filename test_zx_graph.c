@@ -320,6 +320,26 @@ void test_insert_node()
     printf("Pass\n");
 }
 
+void test_is_connected()
+{
+    printf("Testing is_connected: ");
+
+    ZXGraph *graph = initialise_graph(1);
+    Node *input = get_node(graph->inputs[0], graph);
+    Node *output = get_node(graph->outputs[0], graph);
+    Node *node = initialise_hadamard(graph);
+    insert_node(node, input, output);
+
+    // test connected edges
+    assert(is_connected(input, node));
+    assert(is_connected(output, node));
+    assert(!is_connected(input, output));
+
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
 int main()
 {
     test_initialise_graph();
@@ -334,4 +354,5 @@ int main()
     test_remove_edge();
     test_remove_node();
     test_insert_node();
+    test_is_connected();
 }

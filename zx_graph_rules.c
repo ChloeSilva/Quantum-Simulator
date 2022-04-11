@@ -6,15 +6,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-bool contains(int x, int *array, int size)
-{
-    for(int i=0; i<size; i++)
-        if(x == array[i])
-            return true;
-
-    return false;
-}
-
 void apply_fusion(Node *node_1, Node *node_2, ZXGraph *graph)
 {
     if(node_1->type != SPIDER || node_2->type != SPIDER) {
@@ -36,11 +27,11 @@ void apply_fusion(Node *node_1, Node *node_2, ZXGraph *graph)
 
     for(int i=0; i<node_2_edge_count; i++) {       
         int edge = node_2_edges[i];    
-        if(!contains(edge, node_1->edges, node_1->edge_count) 
-            && edge != node_1->id) {
+        if(!is_connected(get_node(edge, graph), node_1) && edge != node_1->id) {
             add_edge(node_1, get_node(edge, graph));
         }
     }
+    
     free(node_2_edges);
 
     // Add node 2's phase to node 1 and remove node 2
