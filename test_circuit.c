@@ -61,7 +61,7 @@ void test_add_gate()
     add_gate(HADAMARD, 1, circuit);
 
     // test gate has been added to circuit
-    Gate *gate = get_gate(circuit->steps->tail->data, 1);
+    Gate *gate = circuit->steps->tail->data[1];
     assert(gate->type == HADAMARD);
     assert(gate->target == 1);
     assert(gate->isControlled == false);

@@ -12,7 +12,8 @@ Node *initialise_node(void)
 		fprintf(stderr, "error: unable to initialise node.\n");
 		exit(EXIT_FAILURE);
 	}
-	node->next = node->prev = node->data = NULL;
+	node->next = node->prev = NULL;
+	node->data = NULL;
 
 	return node;
 }
@@ -49,7 +50,7 @@ void free_linked_list(LinkedList *list)
 	free(list);
 }
 
-void append_linked_list(LinkedList *list, void *data)
+void append_linked_list(LinkedList *list, Gate **data)
 {
 	Node *node;
 
@@ -65,7 +66,7 @@ void append_linked_list(LinkedList *list, void *data)
 		list->head = node;
 }
 
-void prepend_linked_list(LinkedList *list, void *data)
+void prepend_linked_list(LinkedList *list, Gate **data)
 {
 	Node *node;
 

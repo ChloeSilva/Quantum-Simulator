@@ -39,12 +39,12 @@ Gate *initialise_gate(Gate_Type type, int target, int control, bool isControlled
     return gate;
 }
 
-Gate *get_gate(void *gate_slot, int index)
-{
-    //TODO: use pointer to node instead of pointer to data
-    // figure out where the 0x1 comes from
-    return (Gate *) gate_slot + (sizeof(Gate *) * index) + 0x1;
-}
+// Gate *get_gate(void *gate_slot, int index)
+// {
+//     //TODO: use pointer to node instead of pointer to data
+//     // figure out where the 0x1 comes from
+//     return (Gate *) gate_slot + (sizeof(Gate *) * index) + 0x1;
+// }
 
 void free_circuit(Circuit *circuit)
 {
@@ -81,13 +81,13 @@ void add_gate(Gate_Type type, int target, Circuit *circuit)
     Gate *gate = initialise_gate(type, target, 0, false);
     
     // check if target slot is full and create new time step if so
-    Gate *gate_slot = circuit->steps->head->data;
-    if(get_gate(gate_slot, target)->type != NONE)
+    Gate **gate_slot = circuit->steps->tail->data;
+    if(gate_slot[target]->type != NONE)
         add_time_step(circuit);
 
     // add gate to circuit
     gate_slot = circuit->steps->tail->data;
-    *get_gate(gate_slot, target) = *gate;
+    gate_slot[target] = gate;
 }
 
 void add_controlled_gate(Gate_Type type, int target, int control, Circuit *circuit)
@@ -113,13 +113,13 @@ void add_controlled_gate(Gate_Type type, int target, int control, Circuit *circu
     Gate *control_gate = initialise_gate(CONTROL, 0, 0, false);
     
     // check if target and control slots are full and create new time step if so
-    Gate *gate_slot = circuit->steps->tail->data;
-    if(get_gate(gate_slot, target)->type != NONE 
-        || get_gate(gate_slot, control)->type != NONE)
+    Gate **gate_slot = circuit->steps->tail->data;
+    if(gate_slot[target]->type != NONE 
+        || gate_slot[control]->type != NONE)
         add_time_step(circuit);
 
     // add gate to circuit
     gate_slot = circuit->steps->tail->data;
-    *get_gate(gate_slot, target) = *target_gate;
-    *get_gate(gate_slot, control) = *control_gate;
+    gate_slot[target] = target_gate;
+    gate_slot[control] = control_gate;
 }

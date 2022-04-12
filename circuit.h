@@ -4,21 +4,11 @@
 #include "linked_list.h"
 #include <stdbool.h>
 
-typedef enum {HADAMARD, NOT, CONTROL, NONE} Gate_Type;
-
 typedef struct Circuit
 {
     int num_qubits;
     LinkedList *steps;
 } Circuit;
-
-typedef struct Gate
-{
-    Gate_Type type;
-    int target;
-    int control;
-    bool isControlled;
-} Gate;
 
 Circuit *initialise_circuit(int);
 Gate *initialise_gate(Gate_Type, int, int, bool);
