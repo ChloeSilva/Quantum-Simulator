@@ -42,6 +42,18 @@ test_zx_graph: test_zx_graph.c zx_graph.o
 test_zx_graph_rules: test_zx_graph_rules.c zx_graph_rules.o zx_graph.o
 	$(CC) -o test_zx_graph_rules $^ $(CFLAGS) $(CLIBS)
 
+# linked list library
+linked_list.o: linked_list.c linked_list.h
+	$(CC) -c $< $(CFLAGS)
+
+# circuit library
+circuit.o: circuit.c circuit.h linked_list.o
+	$(CC) -c $< $(CFLAGS)
+
+# test_circuit
+test_circuit: test_circuit.c circuit.o linked_list.o
+	$(CC) -o test_circuit $^ $(CFLAGS) $(CLIBS)
+
 # simplify
 simplify: simplify.c zx_graph.o
 	$(CC) -o simplify $^ $(CFLAGS) $(CLIBS)
@@ -49,4 +61,4 @@ simplify: simplify.c zx_graph.o
 .PHONY: clean
 
 clean:
-	rm simulate simplify zx_graph_tests *.o
+	rm simulate simplify test_zx_graph test_zx_graph_rules test_circuit *.o
