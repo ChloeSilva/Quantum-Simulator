@@ -57,14 +57,14 @@ void test_add_gate()
 {
     printf("Testing add_gate: ");
 
-    Circuit *circuit = initialise_circuit(2);
-    add_gate(HADAMARD, 1, circuit);
+    Circuit *circuit = initialise_circuit(1);
+    add_gate(HADAMARD, 0, circuit);
 
     // test gate has been added to circuit
-    Gate *gate = circuit->steps->tail->data[1];
+    Gate *gate = circuit->steps->tail->data[0];
     assert(gate->type == HADAMARD);
-    assert(gate->target == 1);
-    assert(gate->isControlled == false);
+    assert(gate->target == 0);
+    assert(!gate->isControlled);
 
     free_circuit(circuit);
 
@@ -75,6 +75,17 @@ void test_add_controlled_gate()
 {
     printf("Testting add_controlled_gate: ");
 
+    Circuit *circuit = initialise_circuit(2);
+    add_controlled_gate(NOT, 0, 1, circuit);
+
+    // test gate has been added to circuit
+    Gate *gate = circuit->steps->tail->data[0];
+    assert(gate->type == NOT);
+    assert(gate->target == 0);
+    assert(gate->control == 1);
+    assert(gate->isControlled);
+
+    free_circuit(circuit);
 
     printf("Pass\n");
 }
@@ -85,5 +96,5 @@ int main()
     test_initialise_gate();
     test_add_time_step();
     test_add_gate();
-    // test_add_controlled_gate();
+    test_add_controlled_gate();
 }

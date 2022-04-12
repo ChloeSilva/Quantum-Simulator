@@ -39,16 +39,20 @@ Gate *initialise_gate(Gate_Type type, int target, int control, bool isControlled
     return gate;
 }
 
-// Gate *get_gate(void *gate_slot, int index)
-// {
-//     //TODO: use pointer to node instead of pointer to data
-//     // figure out where the 0x1 comes from
-//     return (Gate *) gate_slot + (sizeof(Gate *) * index) + 0x1;
-// }
-
 void free_circuit(Circuit *circuit)
 {
-    // frees all steps and circuit
+    Node *next;
+
+	while(circuit->steps->head) {
+		next = circuit->steps->head->next;
+        for(int i=0; i<circuit->num_qubits; i++)
+            free(circuit->steps->head->data[i]);
+        free(circuit->steps->head->data);
+        free(circuit->steps->head);
+		circuit->steps->head = next;
+	}
+
+
     free_linked_list(circuit->steps);
     free(circuit);
 }
@@ -87,6 +91,7 @@ void add_gate(Gate_Type type, int target, Circuit *circuit)
 
     // add gate to circuit
     gate_slot = circuit->steps->tail->data;
+    free(gate_slot[target]);
     gate_slot[target] = gate;
 }
 
@@ -120,6 +125,8 @@ void add_controlled_gate(Gate_Type type, int target, int control, Circuit *circu
 
     // add gate to circuit
     gate_slot = circuit->steps->tail->data;
+    free(gate_slot[target]);
+    free(gate_slot[control]);
     gate_slot[target] = target_gate;
     gate_slot[control] = control_gate;
 }
