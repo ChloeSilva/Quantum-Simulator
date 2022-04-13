@@ -1,7 +1,7 @@
 #ifndef _ZX_GRAPH_H
 #define _ZX_GRAPH_H
 
-typedef enum {HADAMARD, SPIDER, INPUT, OUTPUT} Type;
+typedef enum {HADAMARD_BOX, SPIDER, INPUT, OUTPUT} Type;
 typedef enum {GREEN, RED} Color;
 
 typedef struct ZXGraph

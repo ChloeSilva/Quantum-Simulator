@@ -97,7 +97,7 @@ void test_initialise_hadamard()
     // test hadamard
     assert(hadamard->id == 2);
     assert(hadamard->edge_count == 0);
-    assert(hadamard->type == HADAMARD);
+    assert(hadamard->type == HADAMARD_BOX);
 
     // test graph
     assert(graph->num_qubits == 1);

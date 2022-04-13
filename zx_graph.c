@@ -141,7 +141,7 @@ Node *initialise_hadamard(ZXGraph *graph)
     // set member data
     hadamard->id = graph->id_counter-1;
     hadamard->edge_count = 0;
-    hadamard->type = HADAMARD;
+    hadamard->type = HADAMARD_BOX;
     
     return hadamard;
 }

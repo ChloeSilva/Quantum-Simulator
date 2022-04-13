@@ -93,14 +93,14 @@ void test_apply_color_change()
     assert(hadamard_1->edge_count == 2);
     assert(is_connected(hadamard_1, spider));
     assert(is_connected(hadamard_1, input));
-    assert(hadamard_1->type == HADAMARD);
+    assert(hadamard_1->type == HADAMARD_BOX);
 
     // test hadamard 2
     assert(hadamard_2->id == 4);
     assert(hadamard_2->edge_count == 2);
     assert(is_connected(hadamard_2, spider));
     assert(is_connected(hadamard_2, output));
-    assert(hadamard_2->type == HADAMARD);
+    assert(hadamard_2->type == HADAMARD_BOX);
 
     // test input
     assert(input->edge_count == 1);
@@ -175,14 +175,14 @@ void test_apply_id2()
     assert(hadamard_1->edge_count == 2);
     assert(is_connected(hadamard_1, input));
     assert(is_connected(hadamard_1, hadamard_2));
-    assert(hadamard_1->type == HADAMARD);
+    assert(hadamard_1->type == HADAMARD_BOX);
 
     // test hadamard 2
     assert(hadamard_2->id == 3);
     assert(hadamard_2->edge_count == 2);
     assert(is_connected(hadamard_2, hadamard_1));
     assert(is_connected(hadamard_2, output));
-    assert(hadamard_2->type == HADAMARD);
+    assert(hadamard_2->type == HADAMARD_BOX);
 
     // test input
     assert(input->edge_count == 1);
