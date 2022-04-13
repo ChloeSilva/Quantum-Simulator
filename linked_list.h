@@ -13,21 +13,21 @@ typedef struct Gate
     bool isControlled;
 } Gate;
 
-typedef struct Node
+typedef struct TimeStep
 {
 	Gate **data;
-	struct Node *next;
-	struct Node *prev;
-} Node;
+	struct TimeStep *next;
+	struct TimeStep *prev;
+} TimeStep;
 
 typedef struct LinkedList
 {
-	Node *head;
-	Node *tail;
+	TimeStep *head;
+	TimeStep *tail;
 } LinkedList;
 
-Node *initialise_node(void);
-void free_node(Node *);
+TimeStep *initialise_time_step(void);
+void free_time_step(TimeStep *);
 LinkedList *initialise_linked_list(void);
 void free_linked_list(LinkedList *);
 void append_linked_list(LinkedList *, Gate **);

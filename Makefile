@@ -55,8 +55,12 @@ test_circuit: test_circuit.c circuit.o linked_list.o
 	$(CC) -o test_circuit $^ $(CFLAGS) $(CLIBS)
 
 # simplify
-simplify: simplify.c zx_graph.o
-	$(CC) -o simplify $^ $(CFLAGS) $(CLIBS)
+simplify.o: simplify.c zx_graph.o circuit.o linked_list.o
+	$(CC) -c $< $(CFLAGS)
+
+# test_simplify
+test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o linked_list.o
+	$(CC) -o test_simplify $^ $(CFLAGS) $(CLIBS)
 
 .PHONY: clean
 

@@ -4,25 +4,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-Node *initialise_node(void)
+TimeStep *initialise_time_step(void)
 {
-	Node *node;
+	TimeStep *timeStep;
 
-	if(!(node = (Node *) malloc(sizeof(Node)))) {
+	if(!(timeStep = (TimeStep *) malloc(sizeof(TimeStep)))) {
 		fprintf(stderr, "error: unable to initialise node.\n");
 		exit(EXIT_FAILURE);
 	}
-	node->next = node->prev = NULL;
-	node->data = NULL;
+	timeStep->next = timeStep->prev = NULL;
+	timeStep->data = NULL;
 
-	return node;
+	return timeStep;
 }
 
-void free_node(Node *node)
+void free_time_step(TimeStep *timeStep)
 {
-	if(!node)
+	if(!timeStep)
 		return;
-	free(node);
+	free(timeStep);
 }
 
 LinkedList *initialise_linked_list(void)
@@ -40,11 +40,11 @@ LinkedList *initialise_linked_list(void)
 
 void free_linked_list(LinkedList *list)
 {
-	Node *next;
+	TimeStep *next;
 
 	while(list->head) {
 		next = list->head->next;
-		free_node(list->head);
+		free_time_step(list->head);
 		list->head = next;
 	}
 	free(list);
@@ -52,9 +52,9 @@ void free_linked_list(LinkedList *list)
 
 void append_linked_list(LinkedList *list, Gate **data)
 {
-	Node *node;
+	TimeStep *node;
 
-	node = initialise_node();
+	node = initialise_time_step();
 
 	node->data = data;
 	node->prev = list->tail;
@@ -68,9 +68,9 @@ void append_linked_list(LinkedList *list, Gate **data)
 
 void prepend_linked_list(LinkedList *list, Gate **data)
 {
-	Node *node;
+	TimeStep *node;
 
-	node = initialise_node();
+	node = initialise_time_step();
 
 	node->data = data;
 	node->next = list->head;
@@ -84,7 +84,7 @@ void prepend_linked_list(LinkedList *list, Gate **data)
 
 void remove_head_linked_list(LinkedList *list)
 {
-	Node *head;
+	TimeStep *head;
 
 	if(!list->head)
 		return;
@@ -100,12 +100,12 @@ void remove_head_linked_list(LinkedList *list)
 
 void remove_tail_linked_list(LinkedList *list)
 {
-	Node *tail;
+	TimeStep *tail;
 
 	if(!list->tail)
 		return;
 	tail = list->tail->prev;
-	free_node(list->tail);
+	free_time_step(list->tail);
 	list->tail = tail;
 	if(list->tail)
 		list->tail->next = NULL;

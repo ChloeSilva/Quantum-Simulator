@@ -41,7 +41,7 @@ Gate *initialise_gate(Gate_Type type, int target, int control, bool isControlled
 
 void free_circuit(Circuit *circuit)
 {
-    Node *next;
+    TimeStep *next;
 
 	while(circuit->steps->head) {
 		next = circuit->steps->head->next;
