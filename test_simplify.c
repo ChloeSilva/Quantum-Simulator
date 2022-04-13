@@ -110,7 +110,16 @@ void test_circuit_to_zx_graph()
     printf("Pass\n");
 }
 
+void test_remove_z_spiders()
+{
+    printf("Testing remove_z_spiders: ");
+
+
+    printf("Pass\n");
+}
+
 int main()
 {
     test_circuit_to_zx_graph();
+    test_remove_z_spiders();
 }

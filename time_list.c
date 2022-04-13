@@ -82,14 +82,19 @@ void prepend_time_step(TimeList *list, Gate **gates)
 		list->last = node;
 }
 
-void remove_first_time_step(TimeList *list)
+void remove_first_time_step(TimeList *list, int num_gates)
 {
 	TimeStep *first;
 
 	if(!list->first)
 		return;
 	first = list->first->next;
+	
+	for(int i=0; i<num_gates; i++)
+            free(list->first->gates[i]);
+        free(list->first->gates);
 	free(list->first);
+	
 	list->first = first;
 	if(list->first)
 		list->first->prev = NULL;
@@ -98,14 +103,19 @@ void remove_first_time_step(TimeList *list)
 
 }
 
-void remove_last_time_step(TimeList *list)
+void remove_last_time_step(TimeList *list, int num_gates)
 {
 	TimeStep *last;
 
 	if(!list->last)
 		return;
 	last = list->last->prev;
-	free_time_step(list->last);
+		
+	for(int i=0; i<num_gates; i++)
+            free(list->last->gates[i]);
+        free(list->last->gates);
+	free(list->last);
+	
 	list->last = last;
 	if(list->last)
 		list->last->next = NULL;

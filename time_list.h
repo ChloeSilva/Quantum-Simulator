@@ -32,7 +32,7 @@ TimeList *initialise_time_list(void);
 void free_time_list(TimeList *);
 void append_time_step(TimeList *, Gate **);
 void prepend_time_step(TimeList *, Gate **);
-void remove_first_time_step(TimeList *);
-void remove_last_time_step(TimeList *);
+void remove_first_time_step(TimeList *, int);
+void remove_last_time_step(TimeList *, int);
 
 #endif

@@ -52,9 +52,38 @@ ZXGraph *circuit_to_zx_graph(Circuit *circuit)
                 }
             }
         }
-
-        remove_first_time_step(circuit->steps);
+        remove_first_time_step(circuit->steps, circuit->num_qubits);
     }
+    
+    return graph;
+}
+
+ZXGraph *remove_z_spiders(ZXGraph *graph)
+{
+    return graph;
+}
+
+ZXGraph *add_hadamard_edges(ZXGraph *graph)
+{
+    return graph;
+}
+
+ZXGraph *clean_edges(ZXGraph *graph)
+{
+    return graph;
+}
+
+ZXGraph *clean_io(ZXGraph *graph)
+{
+    return graph;
+}
+
+ZXGraph *to_graph_like(ZXGraph *graph)
+{
+    graph = remove_z_spiders(graph);
+    graph = add_hadamard_edges(graph);
+    graph = clean_edges(graph);
+    graph = clean_io(graph);
     
     return graph;
 }
