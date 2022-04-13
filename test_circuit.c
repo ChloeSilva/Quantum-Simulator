@@ -45,8 +45,8 @@ void test_add_time_step()
     add_time_step(circuit);
 
     // test time step has been added
-    assert(circuit->steps->head != NULL);
-    assert(circuit->steps->head->data != NULL);
+    assert(circuit->steps->first != NULL);
+    assert(circuit->steps->first->gates != NULL);
 
     free_circuit(circuit);
 
@@ -61,7 +61,7 @@ void test_add_gate()
     add_gate(HADAMARD, 0, circuit);
 
     // test gate has been added to circuit
-    Gate *gate = circuit->steps->tail->data[0];
+    Gate *gate = circuit->steps->last->gates[0];
     assert(gate->type == HADAMARD);
     assert(gate->target == 0);
     assert(!gate->isControlled);
@@ -79,7 +79,7 @@ void test_add_controlled_gate()
     add_controlled_gate(NOT, 0, 1, circuit);
 
     // test gate has been added to circuit
-    Gate *gate = circuit->steps->tail->data[0];
+    Gate *gate = circuit->steps->last->gates[0];
     assert(gate->type == NOT);
     assert(gate->target == 0);
     assert(gate->control == 1);

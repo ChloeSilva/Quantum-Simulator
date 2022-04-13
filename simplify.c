@@ -30,10 +30,10 @@ ZXGraph *circuit_to_zx_graph(Circuit *circuit)
     }
 
     // adds corresponding nodes to graph for each time step
-    while(circuit->steps->head) {
-        TimeStep *current = circuit->steps->head;    
+    while(circuit->steps->first) {
+        TimeStep *current = circuit->steps->first;    
         for(int i=0; i<circuit->num_qubits; i++) {
-            Gate *gate = current->data[i];
+            Gate *gate = current->gates[i];
             if(gate->type != NONE && gate->type != CONTROL) {
                 if(gate->isControlled) {
                     // add controlled gate
@@ -53,7 +53,7 @@ ZXGraph *circuit_to_zx_graph(Circuit *circuit)
             }
         }
 
-        remove_head_linked_list(circuit->steps);
+        remove_first_time_step(circuit->steps);
     }
     
     return graph;

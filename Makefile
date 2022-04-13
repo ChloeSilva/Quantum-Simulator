@@ -26,43 +26,52 @@ endif
 simulate: simulate.c
 	$(CC) $(CFLAGS) -o $@ $^ $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(LIBS)
 
-
-# graph library
+# zx-graph library
 zx_graph.o: zx_graph.c zx_graph.h
 	$(CC) -c $< $(CFLAGS)
 
 zx_graph_rules.o: zx_graph_rules.c zx_graph_rules.h zx_graph.o
 	$(CC) -c $< $(CFLAGS)
 
-# test_zx_graph
 test_zx_graph: test_zx_graph.c zx_graph.o
 	$(CC) -o test_zx_graph $^ $(CFLAGS) $(CLIBS)
 
-# test_zx_graph_rules
+run_test_zx_graph: test_zx_graph
+	./test_zx_graph
+
 test_zx_graph_rules: test_zx_graph_rules.c zx_graph_rules.o zx_graph.o
 	$(CC) -o test_zx_graph_rules $^ $(CFLAGS) $(CLIBS)
 
-# linked list library
-linked_list.o: linked_list.c linked_list.h
-	$(CC) -c $< $(CFLAGS)
+run_test_zx_graph_rules: test_zx_graph_rules
+	./test_zx_graph_rules
 
 # circuit library
-circuit.o: circuit.c circuit.h linked_list.o
+time_list.o: time_list.c time_list.h
 	$(CC) -c $< $(CFLAGS)
 
-# test_circuit
-test_circuit: test_circuit.c circuit.o linked_list.o
+circuit.o: circuit.c circuit.h time_list.o
+	$(CC) -c $< $(CFLAGS)
+
+test_circuit: test_circuit.c circuit.o time_list.o
 	$(CC) -o test_circuit $^ $(CFLAGS) $(CLIBS)
 
+run_test_circuit: test_circuit
+	./test_circuit
+
 # simplify
-simplify.o: simplify.c zx_graph.o circuit.o linked_list.o
+simplify.o: simplify.c zx_graph.o circuit.o time_list.o
 	$(CC) -c $< $(CFLAGS)
 
-# test_simplify
-test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o linked_list.o
+test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o time_list.o
 	$(CC) -o test_simplify $^ $(CFLAGS) $(CLIBS)
+
+run_test_simplify: test_simplify
+	./test_simplify
+
+# run all tests
+run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_test_simplify 
 
 .PHONY: clean
 
 clean:
-	rm simulate simplify test_zx_graph test_zx_graph_rules test_circuit *.o
+	rm simplify simulate test_zx_graph test_zx_graph_rules test_circuit test_simplify *.o
