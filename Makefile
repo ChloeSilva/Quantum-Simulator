@@ -79,4 +79,4 @@ run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_te
 .PHONY: clean
 
 clean:
-	rm simplify simulate test_zx_graph test_zx_graph_rules test_circuit test_simplify *.o
+	rm simplify test_zx_graph test_zx_graph_rules test_circuit test_simplify *.o

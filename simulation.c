@@ -1,5 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
-#define PROGRAM_FILE "program.c"
+#define PROGRAM_FILE "program.cl"
 #define APPLY_GATE_FUNC "apply_gate"
 #define APPLY_CGATE_FUNC "apply_controlled_gate"
 #define MEASURE_FUNC "measure"
