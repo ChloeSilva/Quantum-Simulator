@@ -349,3 +349,12 @@ int is_connected(Node *node_1, Node *node_2)
 
     return false;
 }
+
+int is_green(Node *node)
+{
+    if(node->type == SPIDER)
+        if(node->color == GREEN)
+            return true;
+
+    return false;
+}

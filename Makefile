@@ -59,10 +59,10 @@ run_test_circuit: test_circuit
 	./test_circuit
 
 # simplify
-simplify.o: simplify.c zx_graph.o circuit.o time_list.o
+simplify.o: simplify.c zx_graph.o circuit.o time_list.o zx_graph_rules.o
 	$(CC) -c $< $(CFLAGS)
 
-test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o time_list.o
+test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o time_list.o zx_graph_rules.o
 	$(CC) -o test_simplify $^ $(CFLAGS) $(CLIBS)
 
 run_test_simplify: test_simplify

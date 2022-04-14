@@ -1,4 +1,5 @@
 #include "zx_graph.h"
+#include "zx_graph_rules.h"
 #include "circuit.h"
 
 #include <stdio.h>
@@ -60,6 +61,12 @@ ZXGraph *circuit_to_zx_graph(Circuit *circuit)
 
 ZXGraph *remove_z_spiders(ZXGraph *graph)
 {
+    for(int i=0; i<graph->num_nodes; i++) {
+        Node *current = graph->nodes[i];
+        if(is_green(current))
+            apply_color_change(current, graph);
+    }
+
     return graph;
 }
 
