@@ -23,8 +23,13 @@ ifneq ($(DARWIN),)
 	endif
 endif
 
-simulate: simulate.c
+# TODO: get this working
+# simulation library
+simulation: simulation.c
 	$(CC) $(CFLAGS) -o $@ $^ $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(LIBS)
+
+# test_simulation: test_simulation.c simulation.o
+# 	$(CC) -o test_simulation $^ $(CFLAGS)
 
 # zx-graph library
 zx_graph.o: zx_graph.c zx_graph.h

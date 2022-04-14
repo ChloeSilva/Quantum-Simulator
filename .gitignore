@@ -55,7 +55,8 @@ dkms.conf
 *.DS_Store
 
 # Project Executables
-simulate
+simulation
+test_simulation
 simplify
 test_zx_graph
 test_zx_graph_rules

@@ -5,6 +5,8 @@
 #define MEASURE_FUNC "measure"
 #define INITIALISE_FUNC "initialise_state"
 
+#include "simulation.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -12,40 +14,44 @@
 #include <math.h>
 
 // Host and device data structures
-// Put into struct and pass around to remove global variables
-static cl_context context;
-static cl_device_id device;
-static cl_command_queue queue;
-static cl_program program;
-static cl_ulong global_mem_size;
-static cl_kernel apply_gate_kernel;
-static cl_kernel apply_controlled_gate_kernel;
-static cl_kernel measure_kernel;
-static cl_kernel initialise_state_kernel;
-static float *state_vector;
-static float *probabilities;
-static size_t num_amp;
-static cl_mem probability_buffer;
-static cl_mem state_vector_buffer;
+// TODO: Put into struct and pass around to remove global variables
+// static cl_context context;
+// static cl_device_id device;
+// static cl_command_queue queue;
+// static cl_program program;
+// static cl_ulong global_mem_size;
+// static cl_kernel apply_gate_kernel;
+// static cl_kernel apply_controlled_gate_kernel;
+// static cl_kernel measure_kernel;
+// static cl_kernel initialise_state_kernel;
+// static float *state_vector;
+// static float *probabilities;
+// static size_t num_amp;
+// static cl_mem probability_buffer;
+// static cl_mem state_vector_buffer;
+
+const float sqrt_2 = 1.414214;
+const float not[8] = {0,0,1,0,1,0,0,0};
+const float hadamard[8] = {1/sqrt_2,0,1/sqrt_2,0,1/sqrt_2,0,-1/sqrt_2,0};
 
 int int_to_int(int k) {
     return (k == 0 || k == 1 ? k : ((k % 2) + 10 * int_to_int(k / 2)));
 }
 
-void print_results()
+void print_results(Simulation *simulation)
 {
     printf("Probabilities:\n");
-    for(int i=0; i<num_amp; i++)
-        if(probabilities[i] != 0)
-            printf("%04d: %f %%\n", int_to_int(i), probabilities[i]*100);
+    for(int i=0; i<simulation->num_amp; i++)
+        if(simulation->probabilities[i] != 0)
+            printf("%04d: %f %%\n", int_to_int(i), simulation->probabilities[i]*100);
 }
 
-void test_state_vector(float *state)
+void test_state_vector(float *state, Simulation *simulation)
 {
     cl_int error;
 
-    error = clEnqueueReadBuffer(queue, state_vector_buffer, CL_TRUE, 0,
-        sizeof(float)*num_amp*2, state, 0, NULL, NULL);
+    error = clEnqueueReadBuffer(simulation->queue, simulation->state_vector_buffer,
+        CL_TRUE, 0, sizeof(float)*simulation->num_amp*2, state, 0, NULL, NULL);
     if(error < 0) {
         printf("error: %d\n", error);
         perror("Couldn't enqueue the read state command");
@@ -55,35 +61,38 @@ void test_state_vector(float *state)
     return;
 }
 
-void deallocate_resources()
+void deallocate_resources(Simulation *simulation)
 {
-    free(state_vector);
-    free(probabilities);
-    clReleaseKernel(apply_gate_kernel);
-    clReleaseKernel(apply_controlled_gate_kernel);
-    clReleaseKernel(measure_kernel);
-    clReleaseKernel(initialise_state_kernel);
-    clReleaseCommandQueue(queue);
-    clReleaseProgram(program);
-    clReleaseContext(context);
+    free(simulation->state_vector);
+    free(simulation->probabilities);
+    clReleaseKernel(simulation->apply_gate_kernel);
+    clReleaseKernel(simulation->apply_controlled_gate_kernel);
+    clReleaseKernel(simulation->measure_kernel);
+    clReleaseKernel(simulation->initialise_state_kernel);
+    clReleaseCommandQueue(simulation->queue);
+    clReleaseProgram(simulation->program);
+    clReleaseContext(simulation->context);
     
     return;
 }
 
-void measure()
+void measure(Simulation *simulation)
 {
-    const size_t num_op = num_amp;
+    const size_t num_op = simulation->num_amp;
     cl_int error;
 
-    error = clEnqueueNDRangeKernel(queue, measure_kernel, 1, NULL,
-        &num_op, NULL, 0, NULL, NULL);
+    error = clEnqueueNDRangeKernel(simulation->queue, simulation->measure_kernel, 
+        1, NULL, &num_op, NULL, 0, NULL, NULL);
+    
     if(error < 0) {
         perror("Couldn't enqueue the measure execution command");
         exit(1); 
     }
 
-    error = clEnqueueReadBuffer(queue, probability_buffer, CL_TRUE, 0, 
-        sizeof(float)*num_amp, probabilities, 0, NULL, NULL);
+    error = clEnqueueReadBuffer(simulation->queue, simulation->probability_buffer,
+        CL_TRUE, 0, sizeof(float)*simulation->num_amp, simulation->probabilities,
+        0, NULL, NULL);
+    
     if(error < 0) {
         perror("Couldn't enqueue the read buffer command");
         exit(1);   
@@ -92,11 +101,12 @@ void measure()
     return;
 }
 
-void apply_controlled_gate(int target, int controlled, float *gate)
+void apply_controlled_gate(int target, int controlled, float *gate,
+    Simulation *simulation)
 {
     cl_int error;
     float *a, *b, *c, *d;
-    const size_t num_op = num_amp;
+    const size_t num_op = simulation->num_amp;
 
     a = (float *) malloc(sizeof(float)*2);
     a[0] = gate[0];
@@ -115,44 +125,56 @@ void apply_controlled_gate(int target, int controlled, float *gate)
     d[1] = gate[7];
     
     // Set kernel arguments for apply_controlled_gate
-    error = clSetKernelArg(apply_controlled_gate_kernel, 1, sizeof(int), &controlled);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 
+        1, sizeof(int), &controlled);
+    
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's controlled argument");
         exit(1);
     }
     
-    error = clSetKernelArg(apply_controlled_gate_kernel, 2, sizeof(int), &target);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 
+        2, sizeof(int), &target);
+    
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's target argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_controlled_gate_kernel, 3, sizeof(float)*2, a);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 
+        3, sizeof(float)*2, a);
+    
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's a argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_controlled_gate_kernel, 4, sizeof(float)*2, b);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 
+        4, sizeof(float)*2, b);
+    
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's b argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_controlled_gate_kernel, 5, sizeof(float)*2, c);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 
+        5, sizeof(float)*2, c);
+    
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's c argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_controlled_gate_kernel, 6, sizeof(float)*2, d);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 
+        6, sizeof(float)*2, d);
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's d argument");
         exit(1);
     }
 
-    clEnqueueNDRangeKernel(queue, apply_controlled_gate_kernel, 1, NULL,
-        &num_op, NULL, 0, NULL, NULL);
+    clEnqueueNDRangeKernel(simulation->queue, 
+        simulation->apply_controlled_gate_kernel, 
+        1, NULL, &num_op, NULL, 0, NULL, NULL);
 
     free(a);
     free(b);
@@ -160,11 +182,11 @@ void apply_controlled_gate(int target, int controlled, float *gate)
     free(d);
 }
 
-void apply_gate(int target, float *gate)
+void apply_gate(int target, float *gate, Simulation *simulation)
 {
     cl_int error;
     float *a, *b, *c, *d;
-    const size_t num_op = num_amp;
+    const size_t num_op = simulation->num_amp;
 
     a = (float *) malloc(sizeof(float)*2);
     a[0] = gate[0];
@@ -183,37 +205,37 @@ void apply_gate(int target, float *gate)
     d[1] = gate[7];
 
     // Set kernel arguments for apply_gate
-    error = clSetKernelArg(apply_gate_kernel, 1, sizeof(int), &target);
+    error = clSetKernelArg(simulation->apply_gate_kernel, 1, sizeof(int), &target);
     if(error < 0) {
         perror("Couldn't set apply_gate's target argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_gate_kernel, 2, sizeof(float)*2, a);
+    error = clSetKernelArg(simulation->apply_gate_kernel, 2, sizeof(float)*2, a);
     if(error < 0) {
         perror("Couldn't set apply_gate's a argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_gate_kernel, 3, sizeof(float)*2, b);
+    error = clSetKernelArg(simulation->apply_gate_kernel, 3, sizeof(float)*2, b);
     if(error < 0) {
         perror("Couldn't set apply_gate's b argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_gate_kernel, 4, sizeof(float)*2, c);
+    error = clSetKernelArg(simulation->apply_gate_kernel, 4, sizeof(float)*2, c);
     if(error < 0) {
         perror("Couldn't set apply_gate's c argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_gate_kernel, 5, sizeof(float)*2, d);
+    error = clSetKernelArg(simulation->apply_gate_kernel, 5, sizeof(float)*2, d);
     if(error < 0) {
         perror("Couldn't set apply_gate's d argument");
         exit(1);
     }
 
-    clEnqueueNDRangeKernel(queue, apply_gate_kernel, 1, NULL,
+    clEnqueueNDRangeKernel(simulation->queue, simulation->apply_gate_kernel, 1, NULL,
         &num_op, NULL, 0, NULL, NULL);
 
     free(a);
@@ -224,85 +246,86 @@ void apply_gate(int target, float *gate)
     return;
 }
 
-void initialise_qubits(int num_qubits)
+void initialise_qubits(int num_qubits, Simulation *simulation)
 {
     cl_int error;
 
     // Check the number of qubits is appropriate
     // Max seems to be 13 but should be 27 accoding to device
     // up to 12 qubits can be handled with a single work item per amplitude
-    if(num_qubits > log2(global_mem_size/8) | num_qubits < 0) {
+    if(num_qubits > log2(simulation->global_mem_size/8) | num_qubits < 0) {
         printf("Invalid number of qubits: Maximum %d\n",
-            (int) log2(global_mem_size/8));
+            (int) log2(simulation->global_mem_size/8));
         exit(1);
     }
 
     // Initialise state_vector data to |0....0>
-    num_amp = pow(2, num_qubits);
-    state_vector = (float *) calloc(num_amp*2, sizeof(float));
-    state_vector[0] = 1;
+    simulation->num_amp = pow(2, num_qubits);
+    simulation->state_vector = (float *) calloc(simulation->num_amp*2, sizeof(float));
+    simulation->state_vector[0] = 1;
 
     // Initialise probabilities buffer
-    probabilities = (float *) malloc(sizeof(float)*num_amp);
+    simulation->probabilities = (float *) malloc(sizeof(float)*simulation->num_amp);
 
     // Create CL buffer to hold the state vector
-    state_vector_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-        CL_MEM_COPY_HOST_PTR, sizeof(float)*num_amp*2, state_vector, &error);
+    simulation->state_vector_buffer = clCreateBuffer(simulation->context, CL_MEM_READ_WRITE |
+        CL_MEM_COPY_HOST_PTR, sizeof(float)*simulation->num_amp*2, simulation->state_vector, &error);
     if(error < 0) {
         perror("Couldn't create a buffer object");
         exit(1);
     }
 
     // Create CL buffer to hold the measurement outcome
-    probability_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY,
-        sizeof(float)*num_amp, NULL, &error);
+    simulation->probability_buffer = clCreateBuffer(simulation->context, CL_MEM_READ_ONLY,
+        sizeof(float)*simulation->num_amp, NULL, &error);
     if(error < 0) {
         perror("Couldn't create a buffer object");
         exit(1);
     }
 
     // Set state vector buffer kernel arguments
-    error = clSetKernelArg(apply_gate_kernel, 0,
-        sizeof(cl_mem), &state_vector_buffer);
+    error = clSetKernelArg(simulation->apply_gate_kernel, 0,
+        sizeof(cl_mem), &simulation->state_vector_buffer);
     if(error < 0) {
         perror("Couldn't set apply_gate's state_vector argument");
         exit(1);
     }
 
-    error = clSetKernelArg(apply_controlled_gate_kernel, 0,
-        sizeof(cl_mem), &state_vector_buffer);
+    error = clSetKernelArg(simulation->apply_controlled_gate_kernel, 0,
+        sizeof(cl_mem), &simulation->state_vector_buffer);
     if(error < 0) {
         perror("Couldn't set apply_controlled_gate's state_vector argument");
         exit(1);
     }
 
     // Set kernel arguments for measure
-    error = clSetKernelArg(measure_kernel, 0, 
-        sizeof(cl_mem), &state_vector_buffer);
+    error = clSetKernelArg(simulation->measure_kernel, 0, 
+        sizeof(cl_mem), &simulation->state_vector_buffer);
     if(error < 0) {
         perror("Couldn't set measure's state_vector argument");
         exit(1);
     }
 
-    error = clSetKernelArg(measure_kernel, 1,
-        sizeof(cl_mem), &probability_buffer);
+    error = clSetKernelArg(simulation->measure_kernel, 1,
+        sizeof(cl_mem), &simulation->probability_buffer);
     if(error < 0) {
         perror("Couldn't set measure's probability argument");
         exit(1);
     }
 
     // Set kernel argument for initialise_state
-    error = clSetKernelArg(initialise_state_kernel, 0,
-        sizeof(cl_mem), &state_vector_buffer);
+    error = clSetKernelArg(simulation->initialise_state_kernel, 0,
+        sizeof(cl_mem), &simulation->state_vector_buffer);
     if(error < 0) {
         perror("Couldn't set initialise_state's state_vector argument");
         exit(1);
     }
 }
 
-void set_up_simulator()
+Simulation *set_up_simulation()
 {
     // Data structures
+    Simulation *simulation;
     cl_int error, max_work_item_dims;
     cl_uint max_compute_units;
     cl_platform_id platform;
@@ -310,6 +333,13 @@ void set_up_simulator()
     size_t program_size, log_size, max_work_group_size;
     size_t *max_work_item_size;
     FILE *fp;
+
+    // Initialise Simulation struct
+    simulation = (Simulation *) malloc(sizeof(Simulation));
+    if(!simulation) {
+        fprintf(stderr, "error: unable to initialise Simulation.\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Identify a platform
     error = clGetPlatformIDs(1, &platform, NULL);
@@ -319,14 +349,15 @@ void set_up_simulator()
     }
 
     // Access a GPU
-    error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+    error = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1,
+        &simulation->device, NULL);
     if(error < 0) {
         perror("No GPU found");
         exit(1);
     }
 
     // Check the GPU's maximum number of work dimensions
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+    error = clGetDeviceInfo(simulation->device, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
         sizeof(cl_int), &max_work_item_dims, NULL);
     if(error < 0) {
         perror("Couldn't access GPU's max work item dimensions");
@@ -335,7 +366,7 @@ void set_up_simulator()
     //printf("Maximum work item dimensions: %u\n", max_work_item_dims);
 
     // Check the GPU's maximum number of work group size
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+    error = clGetDeviceInfo(simulation->device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
         sizeof(size_t), &max_work_group_size, NULL);
     if(error < 0) {
         perror("Couldn't access GPU's max work group size");
@@ -345,7 +376,7 @@ void set_up_simulator()
 
     // Check the GPU's maximum number of work item sizes
     max_work_item_size = (size_t *) malloc(max_work_item_dims*sizeof(size_t));
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_ITEM_SIZES,
+    error = clGetDeviceInfo(simulation->device, CL_DEVICE_MAX_WORK_ITEM_SIZES,
         sizeof(size_t)*max_work_item_dims, max_work_item_size, NULL);
     if(error < 0) {
         perror("Couldn't access GPU's max work item size");
@@ -356,7 +387,7 @@ void set_up_simulator()
     free(max_work_item_size);
 
     // Check the GPU's number of compute units
-    error = clGetDeviceInfo(device, CL_DEVICE_MAX_COMPUTE_UNITS,
+    error = clGetDeviceInfo(simulation->device, CL_DEVICE_MAX_COMPUTE_UNITS,
         sizeof(cl_uint), &max_compute_units, NULL);
     if(error < 0) {
         perror("Couldn't access GPU's number of compute units");
@@ -365,8 +396,8 @@ void set_up_simulator()
     //printf("Maximum compute units: %d\n", max_compute_units);
 
     // Check the GPU's global memory size
-    error = clGetDeviceInfo(device, CL_DEVICE_GLOBAL_MEM_SIZE,
-        sizeof(cl_ulong), &global_mem_size, NULL);
+    error = clGetDeviceInfo(simulation->device, CL_DEVICE_GLOBAL_MEM_SIZE,
+        sizeof(cl_ulong), &simulation->global_mem_size, NULL);
     if(error < 0) {
         perror("Couldn't access GPU's global memory size");
         exit(1);
@@ -374,7 +405,7 @@ void set_up_simulator()
     //printf("Global memory size: %llu bytes\n", global_mem_size);
 
     // Create context
-    context = clCreateContext(NULL, 1, &device, NULL, NULL, &error);
+    simulation->context = clCreateContext(NULL, 1, &simulation->device, NULL, NULL, &error);
     if(error < 0) {
         perror("Couldn't create context");
         exit(1);
@@ -399,7 +430,7 @@ void set_up_simulator()
     fclose(fp);
 
     // Create program
-    program = clCreateProgramWithSource(context, 1,
+    simulation->program = clCreateProgramWithSource(simulation->context, 1,
         (const char **) &program_buffer, &program_size, &error);
     if(error < 0) {
         perror("Couldn't create program");
@@ -408,31 +439,31 @@ void set_up_simulator()
     free(program_buffer);
 
     // Build program
-    error = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+    error = clBuildProgram(simulation->program, 0, NULL, NULL, NULL, NULL);
     if(error < 0) {
         // Determine size of log and allocate buffer space
-        clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG,
-            0, NULL, &log_size);
+        clGetProgramBuildInfo(simulation->program, simulation->device,
+            CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
         program_log = (char *) malloc(log_size + 1);
         program_log[log_size] = '\0';
         
         // Copy log into buffer and print
-        clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG,
-            log_size + 1, program_log, NULL);
+        clGetProgramBuildInfo(simulation->program, simulation->device,
+            CL_PROGRAM_BUILD_LOG, log_size + 1, program_log, NULL);
         printf("%s\n", program_log);
         free(program_log);
         exit(1);
     }
 
     // Create kernel for the apply_gate function
-    apply_gate_kernel = clCreateKernel(program, APPLY_GATE_FUNC, &error);
+    simulation->apply_gate_kernel = clCreateKernel(simulation->program, APPLY_GATE_FUNC, &error);
     if(error < 0) {
         perror("Couldn't create the apply gate kernel");
         exit(1);
     }
 
     // Create kernel for the apply_controlled_gate function
-    apply_controlled_gate_kernel = clCreateKernel(program, 
+    simulation->apply_controlled_gate_kernel = clCreateKernel(simulation->program, 
         APPLY_CGATE_FUNC, &error);
     if(error < 0) {
         perror("Couldn't create the apply controlled gate kernel");
@@ -440,48 +471,25 @@ void set_up_simulator()
     }
 
     // Create kernel for the measure function
-    measure_kernel = clCreateKernel(program, MEASURE_FUNC, &error);
+    simulation->measure_kernel = clCreateKernel(simulation->program, MEASURE_FUNC, &error);
     if(error < 0) {
         perror("Couldn't create the measure kernel");
         exit(1);
     }
 
     // Create kernel for the initialise_state function
-    initialise_state_kernel = clCreateKernel(program, INITIALISE_FUNC, &error);
+    simulation->initialise_state_kernel = clCreateKernel(simulation->program, INITIALISE_FUNC, &error);
     if(error < 0) {
         perror("Couldn't create the initialise state kernel");
         exit(1);
     }
 
     // Create command queue for the GPU
-    queue = clCreateCommandQueue(context, device, 0, &error);
+    simulation->queue = clCreateCommandQueue(simulation->context, simulation->device, 0, &error);
     if(error < 0) {
         perror("Couldn't create the command queue");
         exit(1);
     }
 
-    return;
-}
-
-int main()
-{
-    float not[8] = {0,0,1,0,1,0,0,0};
-    float hadamard[8] = {1/sqrt(2),0,1/sqrt(2),0,1/sqrt(2),0,-1/sqrt(2),0};
-
-    set_up_simulator();
-    initialise_qubits(4);
-
-    apply_gate(0, hadamard);
-    apply_gate(1, not);
-    apply_gate(3, not);
-    apply_gate(1, hadamard);
-    apply_controlled_gate(2, 1, not);
-    apply_controlled_gate(1, 0, not);
-    apply_gate(1, not);
-
-    measure();
-    print_results();
-    deallocate_resources();
-
-    return 0;
+    return simulation;
 }
