@@ -60,15 +60,13 @@ ZXGraph *circuit_to_zx_graph(Circuit *circuit)
     return graph;
 }
 
-ZXGraph *remove_z_spiders(ZXGraph *graph)
+void remove_z_spiders(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++) {
         Node *current = graph->nodes[i];
         if(is_red(current))
             apply_color_change(current, graph);
     }
-
-    return graph;
 }
 
 bool remove_double_hadamard(Node *node, ZXGraph *graph)
@@ -105,7 +103,7 @@ bool fuse_adjacent_spiders(Node *node, ZXGraph *graph)
     return false;
 }
 
-ZXGraph *add_hadamard_edges(ZXGraph *graph)
+void add_hadamard_edges(ZXGraph *graph)
 {
     // remove double hadamard from graph using id2 rule
     bool complete = false;
@@ -124,20 +122,6 @@ ZXGraph *add_hadamard_edges(ZXGraph *graph)
             if(fuse_adjacent_spiders(graph->nodes[i], graph))
                 complete = false;
     }
-
-    return graph;
-}
-
-bool remove_parallel_edges(Node *node, ZXGraph *graph)
-{
-    // removes parallel hadamard edges if present
-    // return true if present and false otherwise
-    if(node->type != SPIDER)
-        return false;
-
-    //create array of spiders connected by hadamard edges
-    Node *spiders[node->edge_count];
-
 }
 
 bool remove_self_loops(Node *node, ZXGraph *graph)
@@ -178,22 +162,71 @@ bool remove_hadamard_self_loops(Node *node, ZXGraph *graph)
     return false;
 }
 
-ZXGraph *clean_edges(ZXGraph *graph)
+bool remove_parallel_edges(Node *node, ZXGraph *graph)
 {
-    return graph;
+    // removes parallel hadamard edges if present
+    // return true if present and false otherwise
+    if(node->type != SPIDER)
+        return false;
+
+    Node **spiders = get_hadamard_edge_spiders(node, graph);
+
+    for(int i=0; i<node->edge_count; i++) {
+        for(int j=i+1; j<node->edge_count; j++) {
+            if(spiders[i] == NULL)
+                break;
+            if(spiders[i] == spiders[j]) {
+                remove_hadamard_edges(spiders[i], spiders[j], graph);
+                free(spiders);
+                return true;
+            }
+        }
+    }
+    free(spiders);
+    return false;
 }
 
-ZXGraph *clean_io(ZXGraph *graph)
+void clean_edges(ZXGraph *graph)
 {
-    return graph;
+    // remove self loops
+    bool complete = false;
+    while(!complete) {
+        complete = true;
+        for(int i=0; i<graph->num_nodes; i++)
+            if(remove_self_loops(graph->nodes[i], graph))
+                complete = false;
+    }
+
+    // remove hadamard self loops
+    complete = false;
+    while(!complete) {
+        complete = true;
+        for(int i=0; i<graph->num_nodes; i++)
+            if(remove_hadamard_self_loops(graph->nodes[i], graph))
+                complete = false;
+    }
+
+    // remove parallel hadamard edges
+    complete = false;
+    while(!complete) {
+        complete = true;
+        for(int i=0; i<graph->num_nodes; i++)
+            if(remove_parallel_edges(graph->nodes[i], graph))
+                complete = false;
+    }
+}
+
+void clean_io(ZXGraph *graph)
+{
+
 }
 
 ZXGraph *to_graph_like(ZXGraph *graph)
 {
-    graph = remove_z_spiders(graph);
-    graph = add_hadamard_edges(graph);
-    graph = clean_edges(graph);
-    graph = clean_io(graph);
+    remove_z_spiders(graph);
+    add_hadamard_edges(graph);
+    clean_edges(graph);
+    clean_io(graph);
     
     return graph;
 }

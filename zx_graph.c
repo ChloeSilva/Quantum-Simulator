@@ -269,7 +269,6 @@ void add_edge(Node *node_1, Node *node_2)
 void remove_edge(Node *node_1, Node *node_2)
 {
     int *new_edges;
-    int i, j;
     bool isPresent = false;
 
     // Check edges are connected
@@ -283,13 +282,16 @@ void remove_edge(Node *node_1, Node *node_2)
     }
 
     // Remove node_2 from node_1's edge list
+    bool removed = false;
     if(node_1->edge_count > 1) {
         new_edges = (int *) malloc(sizeof(int)*(node_1->edge_count-1));
-        j = 0;
-        for(i=0; i<node_1->edge_count; i++) {
-            if(node_1->edges[i] != node_2->id) {
+        int j = 0;
+        for(int i=0; i<node_1->edge_count; i++) {
+            if(node_1->edges[i] != node_2->id || removed) {
                 new_edges[j] = node_1->edges[i];
                 j++;
+            } else {
+                removed = true;
             }
         }
         free(node_1->edges);
@@ -300,13 +302,16 @@ void remove_edge(Node *node_1, Node *node_2)
     node_1->edge_count--;
 
     // Remove node_1 from node_2's edge list
+    removed = false;
     if(node_2->edge_count > 1) {
         new_edges = (int *) malloc(sizeof(int)*(node_2->edge_count-1));
-        j = 0;
-        for(i=0; i<node_2->edge_count; i++) {
-            if(node_2->edges[i] != node_1->id) {
+        int j = 0;
+        for(int i=0; i<node_2->edge_count; i++) {
+            if(node_2->edges[i] != node_1->id || removed) {
                 new_edges[j] = node_2->edges[i];
                 j++;
+            } else {
+                removed = true;
             }
         }
         free(node_2->edges);
@@ -367,6 +372,20 @@ int is_red(Node *node)
             return true;
 
     return false;
+}
+
+void remove_hadamard_edges(Node *node_1, Node *node_2, ZXGraph *graph)
+{
+    int edge_count = node_1->edge_count;
+    int edges[edge_count];
+
+    memcpy(edges, node_1->edges, sizeof(int)*edge_count);
+
+    for(int i=0; i<edge_count; i++) {
+        Node *current = get_node(edges[i], graph);
+        if(current->type == HADAMARD_BOX && is_connected(current, node_2))
+            remove_node(current, graph);
+    }
 }
 
 Node **get_hadamard_edge_spiders(Node *node, ZXGraph *graph)

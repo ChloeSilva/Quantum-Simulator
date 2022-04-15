@@ -127,7 +127,7 @@ void test_remove_z_spiders()
     ZXGraph *graph = circuit_to_zx_graph(circuit);   
 
     // when
-    graph = remove_z_spiders(graph);
+    remove_z_spiders(graph);
 
     // then
     Node *input_0 =  get_node(graph->inputs[0], graph);
@@ -290,9 +290,84 @@ void test_add_hadamard_edges()
     printf("Pass\n");
 }
 
+void test_clean_edges()
+{
+    printf("Testing add_hadamard_edges: ");
+
+    // given
+    ZXGraph *graph = initialise_graph(2);
+    Node *input_0 =  get_node(graph->inputs[0], graph);
+    Node *input_1 =  get_node(graph->inputs[1], graph);
+    Node *output_0 =  get_node(graph->outputs[0], graph);
+    Node *output_1 =  get_node(graph->outputs[1], graph);
+    Node *spider_0 = initialise_spider(GREEN, 0, graph);
+    Node *spider_1 = initialise_spider(GREEN, 0, graph);
+    Node *hadamard_0 = initialise_hadamard(graph);
+    Node *hadamard_1 = initialise_hadamard(graph);
+    Node *hadamard_2 = initialise_hadamard(graph);
+    insert_node(spider_0, input_0, output_0);
+    insert_node(spider_1, input_1, output_1);
+    add_edge(hadamard_0, spider_0);
+    add_edge(hadamard_0, spider_1);
+    add_edge(hadamard_1, spider_0);
+    add_edge(hadamard_1, spider_1);
+    add_edge(spider_0, spider_0);
+    add_edge(hadamard_2, spider_1);
+    add_edge(hadamard_2, spider_1);
+
+    // when
+    clean_edges(graph);
+
+    // then
+    // test graph
+    assert(graph->num_qubits == 2);
+    assert(graph->num_nodes == 6);
+
+    // test input 0
+    assert(input_0->edge_count == 1);
+    assert(input_0->type == INPUT);
+    assert(is_connected(input_0, spider_0));
+
+    // test input 1
+    assert(input_1->edge_count == 1);
+    assert(input_1->type == INPUT);
+    assert(is_connected(input_1, spider_1));
+
+    // test output 0
+    assert(output_0->edge_count == 1);
+    assert(output_0->type == OUTPUT);
+    assert(is_connected(output_0, spider_0));
+
+    // test output 1
+    assert(output_1->edge_count == 1);
+    assert(output_1->type == OUTPUT);
+    assert(is_connected(output_1, spider_1));
+
+    // test spider 0
+    assert(spider_0->edge_count == 2);
+    assert(spider_0->type == SPIDER);
+    assert(spider_0->color == GREEN);
+    assert(spider_0->phase == 0.0);
+    assert(is_connected(spider_0, input_0));
+    assert(is_connected(spider_0, output_0));
+
+    // test spider 1
+    assert(spider_1->edge_count == 2);
+    assert(spider_1->type == SPIDER);
+    assert(spider_1->color == GREEN);
+    assert(spider_1->phase == (float) M_PI);
+    assert(is_connected(spider_1, input_1));
+    assert(is_connected(spider_1, output_1));
+
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
 int main()
 {
     test_circuit_to_zx_graph();
     test_remove_z_spiders();
     test_add_hadamard_edges();
+    test_clean_edges();
 }

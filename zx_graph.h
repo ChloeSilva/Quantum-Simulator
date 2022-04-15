@@ -41,6 +41,7 @@ void remove_node(Node *, ZXGraph *);
 void insert_node(Node *, Node *, Node *);
 int is_connected(Node *, Node *);
 int is_red(Node *);
+void remove_hadamard_edges(Node *, Node *, ZXGraph *);
 Node **get_hadamard_edge_spiders(Node *, ZXGraph *);
 
 #endif
