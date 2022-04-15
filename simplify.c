@@ -64,7 +64,7 @@ ZXGraph *remove_z_spiders(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++) {
         Node *current = graph->nodes[i];
-        if(is_green(current))
+        if(is_red(current))
             apply_color_change(current, graph);
     }
 
@@ -75,13 +75,14 @@ bool remove_double_hadamard(Node *node, ZXGraph *graph)
 {
     // removes double hadamard if present
     // returns true if present and false otherwise
-    if(node->type == HADAMARD_BOX) {
-        for(int i=0; i<node->edge_count; i++) {
-            Node *neighbour = get_node(node->edges[i], graph);
-            if(neighbour->type == HADAMARD_BOX) {
-                apply_id2(node, neighbour, graph);
-                return true;
-            }
+    if(node->type != HADAMARD_BOX)
+        return false;
+
+    for(int i=0; i<node->edge_count; i++) {
+        Node *neighbour = get_node(node->edges[i], graph);
+        if(neighbour->type == HADAMARD_BOX) {
+            apply_id2(node, neighbour, graph);
+            return true;
         }
     }
     return false;
@@ -91,13 +92,14 @@ bool fuse_adjacent_spiders(Node *node, ZXGraph *graph)
 {
     // fuses spider with adjacent spider if present
     // returns true if present and false otherwises
-    if(node->type == SPIDER) {
-        for(int i=0; i<node->edge_count; i++) {
-            Node *neighbour = get_node(node->edges[i], graph);
-            if(neighbour->type == SPIDER) {
-                apply_fusion(node, neighbour, graph);
-                return true;
-            }
+    if(node->type != SPIDER)
+        return false;
+
+    for(int i=0; i<node->edge_count; i++) {
+        Node *neighbour = get_node(node->edges[i], graph);
+        if(neighbour->type == SPIDER && neighbour->id != node->id) {
+            apply_fusion(node, neighbour, graph);
+            return true;
         }
     }
     return false;
@@ -105,7 +107,7 @@ bool fuse_adjacent_spiders(Node *node, ZXGraph *graph)
 
 ZXGraph *add_hadamard_edges(ZXGraph *graph)
 {
-    // remove double hadamard from graph
+    // remove double hadamard from graph using id2 rule
     bool complete = false;
     while(!complete) {
         complete = true;
@@ -114,7 +116,7 @@ ZXGraph *add_hadamard_edges(ZXGraph *graph)
                 complete = false;
     }
 
-    // fuse adjacent spiders
+    // fuse adjacent spiders using fusion rule
     complete = false;
     while(!complete) {
         complete = true;
@@ -124,6 +126,56 @@ ZXGraph *add_hadamard_edges(ZXGraph *graph)
     }
 
     return graph;
+}
+
+bool remove_parallel_edges(Node *node, ZXGraph *graph)
+{
+    // removes parallel hadamard edges if present
+    // return true if present and false otherwise
+    if(node->type != SPIDER)
+        return false;
+
+    //create array of spiders connected by hadamard edges
+    Node *spiders[node->edge_count];
+
+}
+
+bool remove_self_loops(Node *node, ZXGraph *graph)
+{
+    // removes self loop if present
+    // returns true if present and false otherwise
+    if(node->type != SPIDER)
+        return false;
+
+    for(int i=0; i<node->edge_count; i++) {
+        Node *neighbour = get_node(node->edges[i], graph);
+        if(neighbour->id == node->id) {
+            remove_edge(node, neighbour);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool remove_hadamard_self_loops(Node *node, ZXGraph *graph)
+{
+    // removes self loop with hadamard edge if present
+    // returns true if present and false otherwise
+    if(node->type != SPIDER)
+        return false;
+    
+    for(int i=0; i<node->edge_count; i++) {
+        Node *neighbour = get_node(node->edges[i], graph);
+        if(neighbour->type == HADAMARD_BOX) {
+            if(neighbour->edges[0] == neighbour->edges[1]) {
+                remove_node(neighbour, graph);
+                add_phase(node, (float) M_PI);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 ZXGraph *clean_edges(ZXGraph *graph)

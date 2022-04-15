@@ -231,6 +231,16 @@ void change_phase(Node *node, float phase)
     node->phase = phase;
 }
 
+void add_phase(Node *node, float phase)
+{
+    if(node->type != SPIDER) {
+        fprintf(stderr, "error: can only change color of spider node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    node->phase += phase;
+}
+
 void add_edge(Node *node_1, Node *node_2)
 {
     int *new_edges;
@@ -350,11 +360,32 @@ int is_connected(Node *node_1, Node *node_2)
     return false;
 }
 
-int is_green(Node *node)
+int is_red(Node *node)
 {
     if(node->type == SPIDER)
-        if(node->color == GREEN)
+        if(node->color == RED)
             return true;
 
     return false;
+}
+
+Node **get_hadamard_edge_spiders(Node *node, ZXGraph *graph)
+{
+    Node **spiders = (Node **) calloc(node->edge_count, sizeof(Node *));
+
+    for(int i=0; i<node->edge_count; i++) {
+        Node *current = get_node(node->edges[i], graph);
+        if(current->type == HADAMARD_BOX) {
+            Node *neighbour;
+            if(current->edges[0] != node->id)
+                neighbour = get_node(current->edges[0], graph);
+            else
+                neighbour = get_node(current->edges[1], graph);
+            
+            if(neighbour->type == SPIDER)
+                spiders[i] = neighbour;
+        }
+    }
+
+    return spiders;
 }

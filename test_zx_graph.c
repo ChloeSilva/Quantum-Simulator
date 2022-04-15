@@ -340,6 +340,44 @@ void test_is_connected()
     printf("Pass\n");
 }
 
+void test_get_hadamard_edge_spiders()
+{
+    printf("Testing get_hadamard_edge_spiders: ");
+
+    // given
+    ZXGraph *graph = initialise_graph(2);
+    Node *input_0 = get_node(graph->inputs[0], graph);
+    Node *input_1 = get_node(graph->inputs[1], graph);
+    Node *output_0 = get_node(graph->outputs[0], graph);
+    Node *output_1 = get_node(graph->outputs[1], graph);
+    Node *spider_0 = initialise_spider(GREEN, 0, graph);
+    Node *spider_1 = initialise_spider(GREEN, 0, graph);
+    Node *spider_2 = initialise_spider(GREEN, 0, graph);
+    Node *spider_3 = initialise_spider(GREEN, 0, graph);
+    Node *hadamard_0 = initialise_hadamard(graph);
+    Node *hadamard_1 = initialise_hadamard(graph);
+    insert_node(spider_0, input_0, output_0);
+    insert_node(hadamard_0, spider_0, output_0);
+    insert_node(spider_1, hadamard_0, output_0);
+    insert_node(hadamard_1, spider_1, output_0);
+    insert_node(spider_2, hadamard_1, output_0);
+    insert_node(spider_3, input_1, output_1);
+    add_edge(spider_1, spider_3);
+
+    // when
+    Node **spiders = get_hadamard_edge_spiders(spider_1, graph);
+
+    // then
+    assert(spiders[0] == spider_0);
+    assert(spiders[1] == spider_2);
+    assert(spiders[2] == NULL);
+
+    free(spiders);
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
 int main()
 {
     test_initialise_graph();
@@ -355,4 +393,5 @@ int main()
     test_remove_node();
     test_insert_node();
     test_is_connected();
+    test_get_hadamard_edge_spiders();
 }
