@@ -23,13 +23,15 @@ ifneq ($(DARWIN),)
 	endif
 endif
 
-# TODO: get this working
 # simulation library
-simulation: simulation.c
-	$(CC) $(CFLAGS) -o $@ $^ $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(LIBS)
+simulation.o: simulation.c simulation.h
+	$(CC) -c $< $(CFLAGS)
 
-# test_simulation: test_simulation.c simulation.o
-# 	$(CC) -o test_simulation $^ $(CFLAGS)
+test_simulation: test_simulation.c simulation.o
+	$(CC) -o test_simulation $^ $(CFLAGS) $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(LIBS)
+
+run_test_simulation: test_simulation
+	./test_simulation
 
 # zx-graph library
 zx_graph.o: zx_graph.c zx_graph.h
@@ -74,9 +76,9 @@ run_test_simplify: test_simplify
 	./test_simplify
 
 # run all tests
-run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_test_simplify 
+run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_test_simplify run_test_simulation
 
 .PHONY: clean
 
 clean:
-	rm simplify test_zx_graph test_zx_graph_rules test_circuit test_simplify *.o
+	rm test_simulation test_simplify test_zx_graph test_zx_graph_rules test_circuit *.o

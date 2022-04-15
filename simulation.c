@@ -13,23 +13,6 @@
 #include <OpenCL/cl.h>
 #include <math.h>
 
-// Host and device data structures
-// TODO: Put into struct and pass around to remove global variables
-// static cl_context context;
-// static cl_device_id device;
-// static cl_command_queue queue;
-// static cl_program program;
-// static cl_ulong global_mem_size;
-// static cl_kernel apply_gate_kernel;
-// static cl_kernel apply_controlled_gate_kernel;
-// static cl_kernel measure_kernel;
-// static cl_kernel initialise_state_kernel;
-// static float *state_vector;
-// static float *probabilities;
-// static size_t num_amp;
-// static cl_mem probability_buffer;
-// static cl_mem state_vector_buffer;
-
 const float sqrt_2 = 1.414214;
 const float not[8] = {0,0,1,0,1,0,0,0};
 const float hadamard[8] = {1/sqrt_2,0,1/sqrt_2,0,1/sqrt_2,0,-1/sqrt_2,0};
@@ -72,6 +55,7 @@ void deallocate_resources(Simulation *simulation)
     clReleaseCommandQueue(simulation->queue);
     clReleaseProgram(simulation->program);
     clReleaseContext(simulation->context);
+    free(simulation);
     
     return;
 }
