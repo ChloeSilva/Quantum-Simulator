@@ -218,7 +218,63 @@ void clean_edges(ZXGraph *graph)
 
 void clean_io(ZXGraph *graph)
 {
+    for(int i=0; i<graph->num_qubits; i++) {
+        Node *input = get_node(graph->inputs[i], graph);
+        Node *output = get_node(graph->outputs[i], graph);
+        Node *input_neighbour = get_node(input->edges[0], graph);
+        Node *output_neighbour = get_node(output->edges[0], graph);
+        
+        // remove direct input to output connections
+        if(input_neighbour == output) {
+            Node *spider_0 = initialise_spider(GREEN, 0, graph);
+            Node *spider_1 = initialise_spider(GREEN, 0, graph);
+            Node *spider_2 = initialise_spider(GREEN, 0, graph);
+            Node *hadamard_0 = initialise_hadamard(graph);
+            Node *hadamard_1 = initialise_hadamard(graph);
 
+            insert_node(spider_0, input, output);
+            insert_node(hadamard_0, spider_0, output);
+            insert_node(spider_1, hadamard_0, output);
+            insert_node(hadamard_1, spider_1, output);
+            insert_node(spider_2, hadamard_1, output);
+        }
+        
+        // remove input to hadamard box connections
+        if(input_neighbour->type == HADAMARD_BOX) {
+            Node *spider = initialise_spider(GREEN, 0, graph);
+            insert_node(spider, input, input_neighbour);
+        }
+
+        // remove output to hadamard box connections
+        if(output_neighbour->type == HADAMARD_BOX) {
+            Node *spider = initialise_spider(GREEN, 0, graph);
+            insert_node(spider, output, output_neighbour);
+        }
+
+        // remove input/output connected to same neighbour
+        if(input_neighbour == output_neighbour) {
+            Node *spider_0 = initialise_spider(GREEN, 0, graph);
+            Node *spider_1 = initialise_spider(GREEN, 0, graph);
+            Node *spider_2 = initialise_spider(GREEN, 0, graph);
+            Node *spider_3 = initialise_spider(GREEN, 0, graph);
+            Node *hadamard_0 = initialise_hadamard(graph);
+            Node *hadamard_1 = initialise_hadamard(graph);
+            Node *hadamard_2 = initialise_hadamard(graph);
+            Node *hadamard_3 = initialise_hadamard(graph);
+
+            // cleaning input side
+            insert_node(spider_0, input, input_neighbour);
+            insert_node(hadamard_0, spider_0, input_neighbour);
+            insert_node(spider_1, hadamard_0, input_neighbour);
+            insert_node(hadamard_1, spider_1, input_neighbour);
+
+            // cleaning output side
+            insert_node(spider_2, output, output_neighbour);
+            insert_node(hadamard_2, spider_2, output_neighbour);
+            insert_node(spider_3, hadamard_2, output_neighbour);
+            insert_node(hadamard_3, spider_3, output_neighbour);
+        }
+    }
 }
 
 ZXGraph *to_graph_like(ZXGraph *graph)
