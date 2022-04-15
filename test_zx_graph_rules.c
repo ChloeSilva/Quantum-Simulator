@@ -159,39 +159,30 @@ void test_apply_id2()
 {
     printf("Testing apply_id2: ");
 
-    ZXGraph *graph;
-    Node *input, *output, *hadamard_1, *hadamard_2;
+    // given
+    ZXGraph *graph = initialise_graph(1);
+    Node *input = get_node(graph->inputs[0], graph);
+    Node *output = get_node(graph->outputs[0], graph);
+    Node *hadamard_1 = initialise_hadamard(graph);
+    Node *hadamard_2 = initialise_hadamard(graph);
+    insert_node(hadamard_1, input, output);
+    insert_node(hadamard_2, hadamard_1, output);
 
-    graph = initialise_graph(1);
-    input = get_node(graph->inputs[0], graph);
-    output = get_node(graph->outputs[0], graph);
-    apply_id2(input, output, graph);
+    // when
+    apply_id2(hadamard_1, hadamard_2, graph);
 
-    hadamard_1 = get_node(2, graph);
-    hadamard_2 = get_node(3, graph);
-
-    // test hadamard 1
-    assert(hadamard_1->id == 2);
-    assert(hadamard_1->edge_count == 2);
-    assert(is_connected(hadamard_1, input));
-    assert(is_connected(hadamard_1, hadamard_2));
-    assert(hadamard_1->type == HADAMARD_BOX);
-
-    // test hadamard 2
-    assert(hadamard_2->id == 3);
-    assert(hadamard_2->edge_count == 2);
-    assert(is_connected(hadamard_2, hadamard_1));
-    assert(is_connected(hadamard_2, output));
-    assert(hadamard_2->type == HADAMARD_BOX);
+    //then
+    // test graph
+    assert(graph->num_nodes == 2);
 
     // test input
     assert(input->edge_count == 1);
-    assert(is_connected(input, hadamard_1));
+    assert(is_connected(input, output));
     assert(input->type == INPUT);
     
     // test output
     assert(output->edge_count == 1);
-    assert(is_connected(output, hadamard_2));
+    assert(is_connected(output, input));
     assert(output->type == OUTPUT);
 
     free_graph(graph);

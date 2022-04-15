@@ -65,13 +65,24 @@ void apply_id1(Node *node_1, Node *node_2, Color color, ZXGraph *graph)
     insert_node(spider, node_1, node_2);
 }
 
-void apply_id2(Node *node_1, Node *node_2, ZXGraph *graph)
+void apply_id2(Node *hadamard_1, Node *hadamard_2, ZXGraph *graph)
 {
-    Node *hadamard_1 = initialise_hadamard(graph);
-    Node *hadamard_2 = initialise_hadamard(graph);
+    Node *node_1, *node_2;
 
-    remove_edge(node_1, node_2);
-    add_edge(node_1, hadamard_1);
-    add_edge(hadamard_1, hadamard_2);
-    add_edge(hadamard_2, node_2);
+    // find first non hadamard connecting node
+    if(get_node(hadamard_1->edges[0], graph)->type != HADAMARD_BOX)
+        node_1 = get_node(hadamard_1->edges[0], graph);
+    else 
+        node_1 = get_node(hadamard_1->edges[1], graph);
+
+    // find second non hadamard connecting node
+    if(get_node(hadamard_2->edges[0], graph)->type != HADAMARD_BOX)
+        node_2 = get_node(hadamard_2->edges[0], graph);
+    else 
+        node_2 = get_node(hadamard_2->edges[1], graph);
+
+    // apply id2
+    remove_node(hadamard_1, graph);
+    remove_node(hadamard_2, graph);
+    add_edge(node_1, node_2);
 }

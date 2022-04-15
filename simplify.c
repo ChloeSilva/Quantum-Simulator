@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 
 Node *initialise_node(Gate *gate, ZXGraph *graph)
@@ -70,8 +71,58 @@ ZXGraph *remove_z_spiders(ZXGraph *graph)
     return graph;
 }
 
+bool remove_double_hadamard(Node *node, ZXGraph *graph)
+{
+    // removes double hadamard if present
+    // returns true if present and false otherwise
+    if(node->type == HADAMARD_BOX) {
+        for(int i=0; i<node->edge_count; i++) {
+            Node *neighbour = get_node(node->edges[i], graph);
+            if(neighbour->type == HADAMARD_BOX) {
+                apply_id2(node, neighbour, graph);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool fuse_adjacent_spiders(Node *node, ZXGraph *graph)
+{
+    // fuses spider with adjacent spider if present
+    // returns true if present and false otherwises
+    if(node->type == SPIDER) {
+        for(int i=0; i<node->edge_count; i++) {
+            Node *neighbour = get_node(node->edges[i], graph);
+            if(neighbour->type == SPIDER) {
+                apply_fusion(node, neighbour, graph);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 ZXGraph *add_hadamard_edges(ZXGraph *graph)
 {
+    // remove double hadamard from graph
+    bool complete = false;
+    while(!complete) {
+        complete = true;
+        for(int i=0; i<graph->num_nodes; i++)
+            if(remove_double_hadamard(graph->nodes[i], graph))
+                complete = false;
+    }
+
+    // fuse adjacent spiders
+    complete = false;
+    while(!complete) {
+        complete = true;
+        for(int i=0; i<graph->num_nodes; i++)
+            if(fuse_adjacent_spiders(graph->nodes[i], graph))
+                complete = false;
+    }
+
     return graph;
 }
 

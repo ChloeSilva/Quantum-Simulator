@@ -147,7 +147,7 @@ void test_remove_z_spiders()
     Node *hadamard_3 = graph->nodes[12];
     Node *hadamard_4 = graph->nodes[13];
 
-        // testing graph
+    // testing graph
     assert(graph->num_qubits == 3);
     assert(graph->num_nodes == 14);
     
@@ -243,8 +243,67 @@ void test_remove_z_spiders()
     printf("Pass\n");
 }
 
+void test_add_hadamard_edges()
+{
+    printf("Testing add_hadamard_edges: ");
+
+    // given
+    Circuit *circuit = initialise_circuit(2);
+    add_gate(HADAMARD, 0, circuit);
+    add_gate(HADAMARD, 0, circuit);
+    add_gate(NOT, 1, circuit);
+    add_gate(NOT, 1, circuit);
+
+    ZXGraph *graph = circuit_to_zx_graph(circuit);  
+
+    // when
+    add_hadamard_edges(graph);
+
+    // then
+    Node *input_0 =  get_node(graph->inputs[0], graph);
+    Node *input_1 =  get_node(graph->inputs[1], graph);
+    Node *output_0 =  get_node(graph->outputs[0], graph);
+    Node *output_1 =  get_node(graph->outputs[1], graph);
+    Node *spider = graph->nodes[4];
+
+    // test graph
+    assert(graph->num_qubits == 2);
+    assert(graph->num_nodes == 5);
+
+    // test input 0
+    assert(input_0->edge_count == 1);
+    assert(input_0->type == INPUT);
+    assert(is_connected(input_0, output_0));
+
+    // test input 1
+    assert(input_1->edge_count == 1);
+    assert(input_1->type == INPUT);
+    assert(is_connected(input_1, spider));
+
+    // test output 0
+    assert(output_0->edge_count == 1);
+    assert(output_0->type == OUTPUT);
+    assert(is_connected(output_0, input_0));
+
+    // test output 1
+    assert(output_1->edge_count == 1);
+    assert(output_1->type == OUTPUT);
+    assert(is_connected(output_1, spider));
+
+    // test spider
+    assert(spider->edge_count == 2);
+    assert(spider->type == SPIDER);
+    assert(spider->color == RED);
+    assert(spider->phase == (float) (M_PI * 2));
+    assert(is_connected(spider, input_1));
+    assert(is_connected(spider, output_1));
+
+
+}
+
 int main()
 {
     test_circuit_to_zx_graph();
     test_remove_z_spiders();
+    test_add_hadamard_edges();
 }
