@@ -3,15 +3,12 @@
 
 #include "zx_graph.h"
 
-void apply_antipod();
 void apply_fusion(Node *, Node *, ZXGraph *);
 void apply_color_change(Node *, ZXGraph *);
 void apply_id1(Node *, Node *, Color, ZXGraph *);
 void apply_id2(Node *, Node *, ZXGraph *);
-void apply_self_loop();
-void apply_self_loop_pi();
-void apply_complementation();
-void apply_pivoting();
-void apply_boundary();
+void apply_local_complement(Node *, ZXGraph *);
+void apply_pivot(Node *, Node *, ZXGraph *);
+Node *extract_boundary(Node *, ZXGraph *);
 
 #endif

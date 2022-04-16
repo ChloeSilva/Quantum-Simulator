@@ -400,6 +400,35 @@ void test_is_pauli()
     printf("Pass\n");
 }
 
+void test_get_hadamard_edge()
+{
+    printf("Testing get_hadamard_edge: ");
+
+    // given
+    ZXGraph *graph = initialise_graph(2);
+    Node *input_0 = get_node(graph->inputs[0], graph);
+    Node *input_1 = get_node(graph->inputs[1], graph);
+    Node *output_0 = get_node(graph->outputs[0], graph);
+    Node *output_1 = get_node(graph->outputs[1], graph);
+    Node *spider_0 = initialise_spider(GREEN, 0, graph);
+    Node *spider_1 = initialise_spider(GREEN, 0, graph);
+    Node *hadamard = initialise_hadamard(graph);
+    insert_node(spider_0, input_0, output_0);
+    insert_node(spider_1, input_1, output_1);
+    add_edge(hadamard, spider_0);
+    add_edge(hadamard, spider_1);
+
+    // when
+    Node *test_hadamard = get_hadamard_edge(spider_0, spider_1, graph);
+
+    // then
+    assert(test_hadamard == hadamard);
+
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
 void test_get_hadamard_edge_spiders()
 {
     printf("Testing get_hadamard_edge_spiders: ");
@@ -456,5 +485,6 @@ int main()
     test_is_connected_io();
     test_is_proper_clifford();
     test_is_pauli();
+    test_get_hadamard_edge();
     test_get_hadamard_edge_spiders();
 }

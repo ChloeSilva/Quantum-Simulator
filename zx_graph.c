@@ -429,6 +429,25 @@ void remove_hadamard_edges(Node *node_1, Node *node_2, ZXGraph *graph)
     }
 }
 
+// returns hadamard connecting nodes
+// return NULL if nodes are not connected by a hadamard edge
+Node *get_hadamard_edge(Node *node_1, Node *node_2, ZXGraph *graph)
+{
+    for(int i=0; i<node_1->edge_count; i++) {
+        Node *current = get_node(node_1->edges[i], graph);
+        if(current->type == HADAMARD_BOX) {
+            if(current->edges[0] == node_2->id)
+                return current;
+            if(current->edges[1] == node_2->id)
+                return current;
+        }
+    }
+
+    return NULL;
+}
+
+// returns array of spiders connected to node by a hadamard edge
+// WARNING: caller is responsible for freeing the array
 Node **get_hadamard_edge_spiders(Node *node, ZXGraph *graph)
 {
     Node **spiders = (Node **) calloc(node->edge_count, sizeof(Node *));

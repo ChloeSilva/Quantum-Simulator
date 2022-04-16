@@ -45,6 +45,7 @@ int is_red(Node *);
 int is_proper_clifford(Node *);
 int is_pauli(Node *);
 void remove_hadamard_edges(Node *, Node *, ZXGraph *);
+Node *get_hadamard_edge(Node *, Node *, ZXGraph *);
 Node **get_hadamard_edge_spiders(Node *, ZXGraph *);
 
 #endif

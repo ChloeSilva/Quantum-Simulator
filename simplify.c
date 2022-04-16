@@ -336,8 +336,10 @@ bool remove_adjacent_pauli(ZXGraph *graph)
 
             // apply pivot to node and its neighbour
             apply_pivot(node, neighbour, graph);
+            free(neighbours);
             return true;
         }
+        free(neighbours);
     }
 
     return false;
@@ -368,29 +370,34 @@ bool remove_boundary_pauli(ZXGraph *graph)
             // extract boundary spider and apply pivot
             node = extract_boundary(node, graph);
             apply_pivot(node, neighbour, graph);
+            free(neighbours);
             return true;
         }
+        free(neighbours);
     }
 
     return false;
 }
 
-ZXGraph *simplify_graph_like(ZXGraph *graph)
+void simplify_graph_like(ZXGraph *graph)
 {
     bool complete = false;
-    while(!complete) 
-    {
+    while(!complete) {
         complete = true
         
-        if(remove_proper_clifford(graph))
-            done = false;
+        if(remove_proper_clifford(graph)) {
+            clean_edges();
+            complete = false;
+        }
        
-        if(remove_adjacent_pauli(graph))
-            done = false;
-        
-        if(remove_boundary_pauli(graph))
-            done = false;
-        
-        clean_edges();
+        if(remove_adjacent_pauli(graph)) {
+            clean_edges();
+            complete = false;
+        }
+            
+        if(remove_boundary_pauli(graph)) {
+            clean_edges();
+            complete = false;
+        }
     }
 }
