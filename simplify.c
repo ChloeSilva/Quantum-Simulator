@@ -383,20 +383,20 @@ void simplify_graph_like(ZXGraph *graph)
 {
     bool complete = false;
     while(!complete) {
-        complete = true
+        complete = true;
         
         if(remove_proper_clifford(graph)) {
-            clean_edges();
+            clean_edges(graph);
             complete = false;
         }
        
         if(remove_adjacent_pauli(graph)) {
-            clean_edges();
+            clean_edges(graph);
             complete = false;
         }
             
         if(remove_boundary_pauli(graph)) {
-            clean_edges();
+            clean_edges(graph);
             complete = false;
         }
     }

@@ -5,11 +5,14 @@
 #include "circuit.h"
 
 ZXGraph *circuit_to_zx_graph(Circuit *);
-ZXGraph *to_graph_like(ZXGraph *);
-ZXGraph *remove_z_spiders(ZXGraph *);
-ZXGraph *add_hadamard_edges(ZXGraph *);
-ZXGraph *clean_edges(ZXGraph *);
-ZXGraph *clean_io(ZXGraph *);
+void to_graph_like(ZXGraph *);
+void remove_z_spiders(ZXGraph *);
+void add_hadamard_edges(ZXGraph *);
+void clean_edges(ZXGraph *);
+void clean_io(ZXGraph *);
+void remove_proper_clifford(ZXGraph *);
+void remove_adjacent_pauli(ZXGraph *);
+void remove_boundary_pauli(ZXGraph *);
 Circuit *zx_graph_to_circuit(ZXGraph *);
 
 #endif
