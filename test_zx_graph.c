@@ -340,6 +340,66 @@ void test_is_connected()
     printf("Pass\n");
 }
 
+void test_is_connected_io()
+{
+    printf("Testing is_connected_io: ");
+
+    ZXGraph *graph = initialise_graph(1);
+    Node *input = get_node(graph->inputs[0], graph);
+    Node *output = get_node(graph->outputs[0], graph);
+    Node *node_1 = initialise_hadamard(graph);
+    Node *node_2 = initialise_hadamard(graph);
+    Node *node_3 = initialise_hadamard(graph);
+    insert_node(node_1, input, output);
+    insert_node(node_2, node_1, output);
+    insert_node(node_3, node_2, output);
+
+    // test connected edges
+    assert(is_connected_io(node_1, graph));
+    assert(!is_connected_io(node_2, graph));
+    assert(is_connected_io(node_3, graph));
+
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
+void test_is_proper_clifford()
+{
+    printf("Testing is_proper_clifford: ");
+
+    ZXGraph *graph = initialise_graph(0);
+    Node *pauli = initialise_spider(GREEN, 1.0, graph);
+    Node *clifford = initialise_spider(GREEN, 1.5, graph);
+    Node *t= initialise_spider(GREEN, 0.25, graph);
+
+    assert(is_proper_clifford(clifford));
+    assert(!is_proper_clifford(pauli));
+    assert(!is_proper_clifford(t));
+
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
+void test_is_pauli()
+{
+    printf("Testing is_pauli: ");
+
+    ZXGraph *graph = initialise_graph(0);
+    Node *pauli = initialise_spider(GREEN, 1.0, graph);
+    Node *clifford = initialise_spider(GREEN, 1.5, graph);
+    Node *t= initialise_spider(GREEN, 0.25, graph);
+
+    assert(is_pauli(pauli));
+    assert(!is_pauli(clifford));
+    assert(!is_pauli(t));
+
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
 void test_get_hadamard_edge_spiders()
 {
     printf("Testing get_hadamard_edge_spiders: ");
@@ -393,5 +453,8 @@ int main()
     test_remove_node();
     test_insert_node();
     test_is_connected();
+    test_is_connected_io();
+    test_is_proper_clifford();
+    test_is_pauli();
     test_get_hadamard_edge_spiders();
 }

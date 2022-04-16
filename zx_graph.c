@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <math.h>
 
 ZXGraph *initialise_graph(int size)
 {
@@ -365,11 +366,51 @@ int is_connected(Node *node_1, Node *node_2)
     return false;
 }
 
+int is_connected_io(Node *node, ZXGraph *graph)
+{
+    for(int i=0; i<node->edge_count; i++) {
+        Node *neighbour = get_node(node->edges[i], graph);
+        if(neighbour->type == INPUT || neighbour->type == OUTPUT)
+            return true;
+    }
+
+    return false;
+}
+
 int is_red(Node *node)
 {
     if(node->type == SPIDER)
         if(node->color == RED)
             return true;
+
+    return false;
+}
+
+int is_proper_clifford(Node *node)
+{
+    if(node->type != SPIDER) {
+        fprintf(stderr, "error: can only check phase of spider node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(floorf(node->phase) == node->phase)
+        return false;
+
+    if(floorf(node->phase*2) == node->phase*2)
+        return true;
+
+    return false;
+}
+
+int is_pauli(Node *node)
+{
+    if(node->type != SPIDER) {
+        fprintf(stderr, "error: can only check phase of spider node.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(floorf(node->phase) == node->phase)
+        return true;
 
     return false;
 }

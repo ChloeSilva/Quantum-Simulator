@@ -60,3 +60,6 @@ test_simplify
 test_zx_graph
 test_zx_graph_rules
 test_circuit
+
+# Personal notes
+*.txt

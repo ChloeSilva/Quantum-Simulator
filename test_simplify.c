@@ -105,7 +105,7 @@ void test_circuit_to_zx_graph()
     assert(spider_2->edge_count == 2);
     assert(spider_2->type == SPIDER);
     assert(spider_2->color == RED);
-    assert(spider_2->phase == (float) M_PI);
+    assert(spider_2->phase == 1.0);
     assert(is_connected(spider_2, spider_1));
     assert(is_connected(spider_2, output_2));
 
@@ -189,7 +189,7 @@ void test_remove_z_spiders()
     assert(spider_2->edge_count == 2);
     assert(spider_2->type == SPIDER);
     assert(spider_2->color == GREEN);
-    assert(spider_2->phase == (float) M_PI);
+    assert(spider_2->phase == 1.0);
     assert(is_connected(spider_2, hadamard_3));
     assert(is_connected(spider_2, hadamard_4));
 
@@ -280,7 +280,7 @@ void test_add_hadamard_edges()
     assert(spider->edge_count == 2);
     assert(spider->type == SPIDER);
     assert(spider->color == RED);
-    assert(spider->phase == (float) (M_PI * 2));
+    assert(spider->phase == 2.0);
     assert(is_connected(spider, input_1));
     assert(is_connected(spider, output_1));
 
@@ -355,7 +355,7 @@ void test_clean_edges()
     assert(spider_1->edge_count == 2);
     assert(spider_1->type == SPIDER);
     assert(spider_1->color == GREEN);
-    assert(spider_1->phase == (float) M_PI);
+    assert(spider_1->phase == 1.0);
     assert(is_connected(spider_1, input_1));
     assert(is_connected(spider_1, output_1));
 
@@ -589,11 +589,34 @@ void test_clean_io()
     printf("Pass\n");
 }
 
+void test_remove_proper_clifford()
+{
+
+}
+
+void test_remove_adjacent_pauli()
+{
+
+}
+
+void test_remove_boundary_pauli()
+{
+    
+}
+
 int main()
 {
+    // circuit to graph
     test_circuit_to_zx_graph();
+    
+    // circuit to graph-like
     test_remove_z_spiders();
     test_add_hadamard_edges();
     test_clean_edges();
     test_clean_io();
+
+    // simplification
+    test_remove_proper_clifford();
+    test_remove_adjacent_pauli();
+    test_remove_bounday_pauli();
 }

@@ -13,7 +13,7 @@ Node *initialise_node(Gate *gate, ZXGraph *graph)
         return initialise_hadamard(graph);
 
     if(gate->type == NOT)
-        return initialise_spider(RED, (float) M_PI, graph);
+        return initialise_spider(RED, (float) 1.0, graph);
 
     fprintf(stderr, "error: invalid gate type.\n");
     exit(EXIT_FAILURE);
@@ -154,7 +154,7 @@ bool remove_hadamard_self_loops(Node *node, ZXGraph *graph)
         if(neighbour->type == HADAMARD_BOX) {
             if(neighbour->edges[0] == neighbour->edges[1]) {
                 remove_node(neighbour, graph);
-                add_phase(node, (float) M_PI);
+                add_phase(node, 1.0);
                 return true;
             }
         }
@@ -277,7 +277,7 @@ void clean_io(ZXGraph *graph)
     }
 }
 
-ZXGraph *to_graph_like(ZXGraph *graph)
+void *to_graph_like(ZXGraph *graph)
 {
     remove_z_spiders(graph);
     add_hadamard_edges(graph);
@@ -285,4 +285,112 @@ ZXGraph *to_graph_like(ZXGraph *graph)
     clean_io(graph);
     
     return graph;
+}
+
+bool remove_proper_clifford(ZXGraph *graph)
+{
+    for(int i=0; i<graph->num_nodes; i++) {
+        Node *node = graph->nodes[i];
+
+        // check if node is interior proper clifford spider
+        if(is_connected_io(node, graph))
+            continue;
+        if(node->type != SPIDER)
+            continue;
+        if(!is_proper_clifford(node))
+            continue;
+        
+        // apply local complementation to node
+        apply_local_complement(node, graph);
+        return true;
+    }
+
+    return false;
+}
+
+bool remove_adjacent_pauli(ZXGraph *graph)
+{
+    for(int i=0; i<graph->num_nodes; i++) {
+        Node *node = graph->nodes[i];
+
+        // check if node is interior pauli spider
+        if(is_connected_io(node, graph))
+            continue;
+        if(node->type != SPIDER)
+            continue;
+        if(!is_pauli(node))
+            continue;
+
+        // check if node is connected to interior pauli spider
+        Node **neighbours = get_hadamard_edge_spiders(node, graph);
+        for(int j=0; j<node->edge_count; j++) {
+            Node *neighbour = neighbours[j];
+            if(neighbour == NULL)
+                continue;
+            if(is_connected_io(neighbour, graph))
+                continue;
+            if(neighbour->type != SPIDER)
+                continue;
+            if(!is_pauli(neighbour))
+                continue;
+
+            // apply pivot to node and its neighbour
+            apply_pivot(node, neighbour, graph);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool remove_boundary_pauli(ZXGraph *graph)
+{
+    for(int i=0; i<graph->num_nodes; i++) {
+        Node *node = graph->nodes[i];
+
+        // check if node is boundary spider
+        if(!is_connected_io(node, graph))
+            continue;
+
+        // check if node is connected to interior pauli spider
+        Node **neighbours = get_hadamard_edge_spiders(node, graph);
+        for(int j=0; j<node->edge_count; j++) {
+            Node *neighbour = neighbours[j];
+            if(neighbour == NULL)
+                continue;
+            if(is_connected_io(neighbour, graph))
+                continue;
+            if(neighbour->type != SPIDER)
+                continue;
+            if(!is_pauli(neighbour))
+                continue;
+
+            // extract boundary spider and apply pivot
+            node = extract_boundary(node, graph);
+            apply_pivot(node, neighbour, graph);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+ZXGraph *simplify_graph_like(ZXGraph *graph)
+{
+    bool complete = false;
+    while(!complete) 
+    {
+        complete = true
+        
+        if(remove_proper_clifford(graph))
+            done = false;
+       
+        if(remove_adjacent_pauli(graph))
+            done = false;
+        
+        if(remove_boundary_pauli(graph))
+            done = false;
+        
+        clean_edges();
+    }
 }
