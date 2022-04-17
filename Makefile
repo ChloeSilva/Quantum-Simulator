@@ -75,10 +75,17 @@ test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o time_list.o zx_gr
 run_test_simplify: test_simplify
 	./test_simplify
 
+# circuit synthesis
+circuit_synthesis.o: circuit_synthesis.c circuit_synthesis.h
+	$(CC) -c $< $(CFLAGS)
+
+test_circuit_synthesis: test_circuit_synthesis.c circuit_synthesis.o
+	$(CC) -o test_circuit_synthesis $^ $(CFLAGS) $(CLIBS)
+
 # run all tests
 run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_test_simplify run_test_simulation
 
 .PHONY: clean
 
 clean:
-	rm test_simulation test_simplify test_zx_graph test_zx_graph_rules test_circuit *.o
+	rm test_simulation test_simplify test_zx_graph test_zx_graph_rules test_circuit test_circuit_synthesis *.o
