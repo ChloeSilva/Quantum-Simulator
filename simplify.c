@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <math.h>
+#include <string.h>
 
 Node *initialise_node(Gate *gate, ZXGraph *graph)
 {
@@ -405,7 +406,29 @@ void simplify_graph_like(ZXGraph *graph)
 
 void add_cz_layer(Circuit *circuit, ZXGraph *graph)
 {
+    // Create an array that returns the qubit a node acts on
+    int size = graph->num_qubits;
+    int qubit[graph->id_counter];
 
+    for(int i=0; i<size; i++) {
+        Node *input = get_node(graph->inputs[i], graph);
+        qubit[input->edges[0]] = i;
+    }
+
+    // Add CZ gate between input spiders connected by hadamard edge
+    for(int i=0; i<size; i++) {
+        Node *node_1 = get_node(get_node(graph->inputs[i], graph)->edges[0], graph);
+        
+        for(int j=i+1; j<size; j++) {
+            Node *node_2 = get_node(get_node(graph->inputs[j], graph)->edges[0], graph);
+            Node *hadamard = get_hadamard_edge(node_1, node_2, graph);
+            
+            if(hadamard) {
+                add_controlled_gate(Z, qubit[node_1->id], qubit[node_2->id], circuit);
+                remove_node(hadamard, graph);
+            }
+        }
+    }
 }
 
 void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
@@ -415,28 +438,52 @@ void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
     int cnot_layer_size;
     int *cnot_layer;
 
+    // synthesis circuit of cnot gates from graph
     matrix = get_biadjacency_matrix(graph);
     cnot_layer = synthesise_linear_circuit(matrix, size, &cnot_layer_size);
     
+    // add cnot gates to circuit
     for(int i=0; i<cnot_layer_size; i+=2)
         add_controlled_gate(NOT, cnot_layer[i+1], cnot_layer[i], circuit);
+
+    // remove spiders from graph
+    for(int i=0; i<size; i++) {
+        Node *input = get_node(graph->inputs[i], graph);
+        Node *spider_1 = get_node(input->edges[0], graph);
+        Node *spider_2 = get_node(get_node(graph->outputs[i], graph)->edges[0], graph);
+        
+        int edge_count = spider_1->edge_count;
+        int *edges = malloc(sizeof(int)*edge_count);
+        memcpy(edges, spider_1->edges, sizeof(int)*edge_count);
+        for(int j=0; j<edge_count; j++) {
+            Node *neighbour = get_node(edges[j], graph);
+            if(neighbour->type == HADAMARD_BOX)
+                remove_node(neighbour, graph);
+        }
+        free(edges);
+
+        remove_node(spider_1, graph);
+        add_edge(input, spider_2);
+    }
 
     free(matrix);
     free(cnot_layer);
 }
 
-void add_hadamard_layer(Circuit *circuit, ZXGraph *graph)
+void add_hadamard_layer(Circuit *circuit)
 {
-
+    // add hadamards to circuit
+    for(int i=0; i<circuit->num_qubits; i++)
+        add_gate(HADAMARD, i, circuit);
 }
 
 Circuit *extract_clifford(ZXGraph *graph)
 {
-    Circuit *circuit = initialise_circuit(graph->num_nodes);
+    Circuit *circuit = initialise_circuit(graph->num_qubits);
 
     add_cz_layer(circuit, graph);
     add_cnot_layer(circuit, graph);
-    add_hadamard_layer(circuit, graph);
+    add_hadamard_layer(circuit);
     add_cz_layer(circuit, graph);
 
     return circuit;
