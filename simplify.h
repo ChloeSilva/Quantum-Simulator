@@ -13,6 +13,9 @@ void clean_io(ZXGraph *);
 void remove_proper_clifford(ZXGraph *);
 void remove_adjacent_pauli(ZXGraph *);
 void remove_boundary_pauli(ZXGraph *);
-Circuit *zx_graph_to_circuit(ZXGraph *);
+void add_cz_layer(Circuit *, ZXGraph *);
+void add_cnot_layer(Circuit *, ZXGraph *);
+void add_hadamard_layer(Circuit *, ZXGraph *);
+Circuit *extract_clifford(ZXGraph *);
 
 #endif

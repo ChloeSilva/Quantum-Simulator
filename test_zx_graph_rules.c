@@ -3,7 +3,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+
+void assert(int status)
+{
+    if(status == 1)
+        return;
+
+    printf("\033[1;31mFailed\n \033[0m");
+    exit(EXIT_FAILURE);
+}
 
 void test_apply_fusion()
 {
@@ -570,6 +578,8 @@ void test_extract_boundary()
 
 int main()
 {
+    printf("\033[1;32m");
+
     test_apply_fusion();
     test_apply_color_change();
     test_apply_id1();
@@ -577,4 +587,6 @@ int main()
     test_apply_local_complement();
     test_apply_pivot();
     test_extract_boundary();
+
+    printf("\033[0m");
 }

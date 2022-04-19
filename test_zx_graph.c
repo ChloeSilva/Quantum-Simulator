@@ -2,7 +2,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+
+void assert(int status)
+{
+    if(status == 1)
+        return;
+
+    printf("\033[1;31mFailed\n \033[0m");
+    exit(EXIT_FAILURE);
+}
 
 void test_initialise_graph()
 {
@@ -101,7 +109,7 @@ void test_initialise_hadamard()
 
     // test graph
     assert(graph->num_qubits == 1);
-    assert(graph->num_nodes = 3);
+    assert(graph->num_nodes == 3);
     assert(get_node(2, graph) == hadamard);
 
     free_graph(graph);
@@ -469,6 +477,8 @@ void test_get_hadamard_edge_spiders()
 
 int main()
 {
+    printf("\033[1;32m");
+
     test_initialise_graph();
     test_initialise_input();
     test_initialise_output();
@@ -487,4 +497,6 @@ int main()
     test_is_pauli();
     test_get_hadamard_edge();
     test_get_hadamard_edge_spiders();
+
+    printf("\033[0m");
 }

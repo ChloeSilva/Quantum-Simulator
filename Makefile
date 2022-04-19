@@ -31,7 +31,7 @@ test_simulation: test_simulation.c simulation.o
 	$(CC) -o test_simulation $^ $(CFLAGS) $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(LIBS)
 
 run_test_simulation: test_simulation
-	./test_simulation
+	leaks -atExit -- ./test_simulation
 
 # zx-graph library
 zx_graph.o: zx_graph.c zx_graph.h
@@ -44,13 +44,13 @@ test_zx_graph: test_zx_graph.c zx_graph.o
 	$(CC) -o test_zx_graph $^ $(CFLAGS) $(CLIBS)
 
 run_test_zx_graph: test_zx_graph
-	./test_zx_graph
+	leaks -atExit -- ./test_zx_graph
 
 test_zx_graph_rules: test_zx_graph_rules.c zx_graph_rules.o zx_graph.o
 	$(CC) -o test_zx_graph_rules $^ $(CFLAGS) $(CLIBS)
 
 run_test_zx_graph_rules: test_zx_graph_rules
-	./test_zx_graph_rules
+	leaks -atExit -- ./test_zx_graph_rules
 
 # circuit library
 time_list.o: time_list.c time_list.h
@@ -63,7 +63,7 @@ test_circuit: test_circuit.c circuit.o time_list.o
 	$(CC) -o test_circuit $^ $(CFLAGS) $(CLIBS)
 
 run_test_circuit: test_circuit
-	./test_circuit
+	leaks -atExit -- ./test_circuit
 
 # simplify
 simplify.o: simplify.c zx_graph.o circuit.o time_list.o zx_graph_rules.o
@@ -73,17 +73,20 @@ test_simplify: test_simplify.c simplify.o zx_graph.o circuit.o time_list.o zx_gr
 	$(CC) -o test_simplify $^ $(CFLAGS) $(CLIBS)
 
 run_test_simplify: test_simplify
-	./test_simplify
+	leaks -atExit -- ./test_simplify
 
 # circuit synthesis
-circuit_synthesis.o: circuit_synthesis.c circuit_synthesis.h
+circuit_synthesis.o: circuit_synthesis.c circuit_synthesis.h zx_graph.o
 	$(CC) -c $< $(CFLAGS)
 
-test_circuit_synthesis: test_circuit_synthesis.c circuit_synthesis.o
+test_circuit_synthesis: test_circuit_synthesis.c circuit_synthesis.o zx_graph.o
 	$(CC) -o test_circuit_synthesis $^ $(CFLAGS) $(CLIBS)
 
+run_test_circuit_synthesis: test_circuit_synthesis
+	leaks -atExit -- ./test_circuit_synthesis
+
 # run all tests
-run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_test_simplify run_test_simulation
+run_all_tests: run_test_zx_graph run_test_zx_graph_rules run_test_circuit run_test_simplify run_test_simulation run_test_circuit_synthesis
 
 .PHONY: clean
 

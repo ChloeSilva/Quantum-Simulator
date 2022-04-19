@@ -3,7 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <assert.h>
+
+void assert(int status)
+{
+    if(status == 1)
+        return;
+
+    printf("\033[1;31mFailed\n \033[0m");
+    exit(EXIT_FAILURE);
+}
 
 void test_initialise_circuit()
 {
@@ -92,9 +100,13 @@ void test_add_controlled_gate()
 
 int main()
 {
+    printf("\033[1;32m");
+
     test_initialise_circuit();
     test_initialise_gate();
     test_add_time_step();
     test_add_gate();
     test_add_controlled_gate();
+    
+    printf("\033[0m");
 }

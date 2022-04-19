@@ -3,10 +3,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <assert.h>
+
+void assert(int status)
+{
+    if(status == 1)
+        return;
+
+    printf("\033[1;31mFailed\n \033[0m");
+    exit(EXIT_FAILURE);
+}
 
 int main()
 {
+    printf("\033[1;32m");
     printf("Testing simulation: ");
 
     Simulation *simulation = set_up_simulation();
@@ -41,4 +50,5 @@ int main()
     deallocate_resources(simulation);
 
     printf("Pass\n");
+    printf("\033[0m");
 }

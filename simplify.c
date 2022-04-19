@@ -401,3 +401,36 @@ void simplify_graph_like(ZXGraph *graph)
         }
     }
 }
+
+void add_cz_layer(Circuit *circuit, ZXGraph *graph)
+{
+
+}
+
+void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
+{
+    // int size = graph->num_qubits;
+    // int matrix[size][size];
+    // int *cnot_layer;
+
+    // matrix = get_biadjacency_matrix(graph);
+    // cnot_layer = synthesise_linear_circuit(matrix, size);
+    
+}
+
+void add_hadamard_layer(Circuit *circuit, ZXGraph *graph)
+{
+
+}
+
+Circuit *extract_clifford(ZXGraph *graph)
+{
+    // Circuit *circuit = initialise_circuit(graph->num_gates);
+
+    // add_cz_layer(circuit, graph);
+    // add_cnot_layer(circuit, graph);
+    // add_hadamard_layer(circuit, graph);
+    // add_cz_layer(circuit, graph);
+
+    // return circuit;
+}

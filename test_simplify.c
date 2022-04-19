@@ -2,8 +2,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <math.h>
+
+void assert(int status)
+{
+    if(status == 1)
+        return;
+
+    printf("\033[1;31mFailed\n \033[0m");
+    exit(EXIT_FAILURE);
+}
 
 void test_circuit_to_zx_graph()
 {
@@ -953,6 +961,7 @@ void test_remove_boundary_pauli()
 
 int main()
 {
+    printf("\033[1;32m");
     // circuit to graph
     test_circuit_to_zx_graph();
     
@@ -966,4 +975,6 @@ int main()
     test_remove_proper_clifford();
     test_remove_adjacent_pauli();
     test_remove_boundary_pauli();
+
+    printf("\033[0m");
 }
