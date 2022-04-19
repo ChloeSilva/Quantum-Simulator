@@ -1,4 +1,6 @@
 #include "simplify.h"
+#include "circuit.h"
+#include "time_list.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -959,9 +961,138 @@ void test_remove_boundary_pauli()
     printf("Pass\n");
 }
 
+void test_add_cnot_layer()
+{
+    printf("Testing add_cnot_layer: ");
+
+    // given
+    Circuit *circuit = initialise_circuit(4);
+    ZXGraph *graph = initialise_graph(4);
+    Node *input_0 = get_node(graph->inputs[0], graph);
+    Node *input_1 = get_node(graph->inputs[1], graph);
+    Node *input_2 = get_node(graph->inputs[2], graph);
+    Node *input_3 = get_node(graph->inputs[3], graph);
+    Node *output_0 = get_node(graph->outputs[0], graph);
+    Node *output_1 = get_node(graph->outputs[1], graph);
+    Node *output_2 = get_node(graph->outputs[2], graph);
+    Node *output_3 = get_node(graph->outputs[3], graph);
+    Node *left_spider_0 = initialise_spider(GREEN, 0.0, graph);
+    Node *left_spider_1 = initialise_spider(GREEN, 0.0, graph);
+    Node *left_spider_2 = initialise_spider(GREEN, 0.0, graph);
+    Node *left_spider_3 = initialise_spider(GREEN, 0.0, graph);
+    Node *right_spider_0 = initialise_spider(GREEN, 0.0, graph);
+    Node *right_spider_1 = initialise_spider(GREEN, 0.0, graph);
+    Node *right_spider_2 = initialise_spider(GREEN, 0.0, graph);
+    Node *right_spider_3 = initialise_spider(GREEN, 0.0, graph);
+    Node *hadamard_0 = initialise_hadamard(graph);
+    Node *hadamard_1 = initialise_hadamard(graph);
+    Node *hadamard_2 = initialise_hadamard(graph);
+    Node *hadamard_3 = initialise_hadamard(graph);
+    Node *hadamard_4 = initialise_hadamard(graph);
+    Node *hadamard_5 = initialise_hadamard(graph);
+    Node *hadamard_6 = initialise_hadamard(graph);
+    Node *hadamard_7 = initialise_hadamard(graph);
+    Node *hadamard_8 = initialise_hadamard(graph);
+
+    insert_node(left_spider_0, input_0, output_0);
+    insert_node(right_spider_0, left_spider_0, output_0);
+    insert_node(left_spider_1, input_1, output_1);
+    insert_node(right_spider_1, left_spider_1, output_1);
+    insert_node(left_spider_2, input_2, output_2);
+    insert_node(right_spider_2, left_spider_2, output_2);
+    insert_node(left_spider_3, input_3, output_3);
+    insert_node(right_spider_3, left_spider_3, output_3);
+    
+    insert_node(hadamard_0, left_spider_0, right_spider_0);
+    add_edge(left_spider_0, right_spider_2);
+    insert_node(hadamard_1, left_spider_0, right_spider_2);
+    add_edge(left_spider_1, right_spider_2);
+    insert_node(hadamard_2, left_spider_1, right_spider_2);
+    add_edge(left_spider_2, right_spider_0);
+    insert_node(hadamard_3, left_spider_2, right_spider_0);
+    add_edge(left_spider_2, right_spider_1);
+    insert_node(hadamard_4, left_spider_2, right_spider_1);
+    insert_node(hadamard_5, left_spider_2, right_spider_2);
+    add_edge(left_spider_3, right_spider_0);
+    insert_node(hadamard_6, left_spider_3, right_spider_0);
+    add_edge(left_spider_3, right_spider_1);
+    insert_node(hadamard_7, left_spider_3, right_spider_1);
+    insert_node(hadamard_8, left_spider_3, right_spider_3);
+
+    // when
+    add_cnot_layer(circuit, graph);
+
+    // then
+    TimeStep *step = circuit->steps->first;
+    Gate *gate_1 = step->gates[0];
+    step = step->next;
+    Gate *gate_2 = step->gates[1];
+    step = step->next;
+    Gate *gate_3 = step->gates[3];
+    step = step->next;
+    Gate *gate_4 = step->gates[2];
+    step = step->next;
+    Gate *gate_5 = step->gates[1];
+    step = step->next;
+    Gate *gate_6 = step->gates[2];
+    step = step->next;
+    Gate *gate_7 = step->gates[3];
+
+    // test circuit
+    assert(circuit->num_qubits == 4);
+
+    // test gate 1
+    assert(gate_1->type == NOT);
+    assert(gate_1->isControlled);
+    assert(gate_1->target == 0);
+    assert(gate_1->control == 2);
+
+    // test gate 2
+    assert(gate_2->type == NOT);
+    assert(gate_2->isControlled);
+    assert(gate_2->target == 1);
+    assert(gate_2->control == 2);
+    
+    // test gate 3
+    assert(gate_3->type == NOT);
+    assert(gate_3->isControlled);
+    assert(gate_3->target == 3);
+    assert(gate_3->control == 2);
+
+    // test gate 4
+    assert(gate_4->type == NOT);
+    assert(gate_4->isControlled);
+    assert(gate_4->target == 2);
+    assert(gate_4->control == 1);
+
+    // test gate 5
+    assert(gate_5->type == NOT);
+    assert(gate_5->isControlled);
+    assert(gate_5->target == 1);
+    assert(gate_5->control == 2);
+
+    // test gate 6
+    assert(gate_6->type == NOT);
+    assert(gate_6->isControlled);
+    assert(gate_6->target == 2);
+    assert(gate_6->control == 0);
+
+    // test gate 7
+    assert(gate_7->type == NOT);
+    assert(gate_7->isControlled);
+    assert(gate_7->target == 3);
+    assert(gate_7->control == 2);
+
+    free_circuit(circuit);
+    free_graph(graph);
+
+    printf("Pass\n");
+}
+
 int main()
 {
     printf("\033[1;32m");
+    
     // circuit to graph
     test_circuit_to_zx_graph();
     
@@ -975,6 +1106,9 @@ int main()
     test_remove_proper_clifford();
     test_remove_adjacent_pauli();
     test_remove_boundary_pauli();
+
+    // circuit extraction
+    test_add_cnot_layer();
 
     printf("\033[0m");
 }

@@ -18,6 +18,7 @@ void test_synthesise_linear_circuit()
     printf("Testing synthesise_linear_circuit: ");
 
     // given
+    int cnot_layer_size;
     int matrix[6][6] = {{1,1,0,0,0,0},
                         {1,0,0,1,1,0},
                         {0,1,0,0,1,0},
@@ -26,14 +27,16 @@ void test_synthesise_linear_circuit()
                         {0,0,1,1,1,0}};
 
     // when
-    int *circuit = synthesise_linear_circuit((int *) matrix, 6);
+    int *circuit = synthesise_linear_circuit((int *) matrix, 6, &cnot_layer_size);
 
     // then
-    int test_circuit[30] = {1,4,1,5,1,2,2,3,3,5,4,6,4,3,3,4,
-                            6,5,5,4,5,3,6,3,4,2,2,1,5,4};
+    int test_circuit[30] = {4,3,1,0,3,1,5,2,4,2,4,3,5,4,2,
+                            3,3,2,3,5,2,4,1,2,0,1,0,4,0,3};
     
     for(int i=0; i<30; i++)
-        assert(circuit[i] == test_circuit[i]-1);
+        assert(circuit[i] == test_circuit[i]);
+
+    assert(cnot_layer_size == 30);
 
     free(circuit);
 

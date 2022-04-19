@@ -1,6 +1,7 @@
 #include "zx_graph.h"
 #include "zx_graph_rules.h"
 #include "circuit.h"
+#include "circuit_synthesis.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -409,13 +410,19 @@ void add_cz_layer(Circuit *circuit, ZXGraph *graph)
 
 void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
 {
-    // int size = graph->num_qubits;
-    // int matrix[size][size];
-    // int *cnot_layer;
+    int size = graph->num_qubits;
+    int *matrix;
+    int cnot_layer_size;
+    int *cnot_layer;
 
-    // matrix = get_biadjacency_matrix(graph);
-    // cnot_layer = synthesise_linear_circuit(matrix, size);
+    matrix = get_biadjacency_matrix(graph);
+    cnot_layer = synthesise_linear_circuit(matrix, size, &cnot_layer_size);
     
+    for(int i=0; i<cnot_layer_size; i+=2)
+        add_controlled_gate(NOT, cnot_layer[i+1], cnot_layer[i], circuit);
+
+    free(matrix);
+    free(cnot_layer);
 }
 
 void add_hadamard_layer(Circuit *circuit, ZXGraph *graph)
@@ -425,12 +432,12 @@ void add_hadamard_layer(Circuit *circuit, ZXGraph *graph)
 
 Circuit *extract_clifford(ZXGraph *graph)
 {
-    // Circuit *circuit = initialise_circuit(graph->num_gates);
+    Circuit *circuit = initialise_circuit(graph->num_nodes);
 
-    // add_cz_layer(circuit, graph);
-    // add_cnot_layer(circuit, graph);
-    // add_hadamard_layer(circuit, graph);
-    // add_cz_layer(circuit, graph);
+    add_cz_layer(circuit, graph);
+    add_cnot_layer(circuit, graph);
+    add_hadamard_layer(circuit, graph);
+    add_cz_layer(circuit, graph);
 
-    // return circuit;
+    return circuit;
 }

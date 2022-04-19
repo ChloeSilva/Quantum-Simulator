@@ -4,16 +4,21 @@
 #include <stdlib.h>
 #include <math.h>
 
+void flip_control_target(int *circuit, int n)
+{
+    int temp;
+
+    for(int i=0; i<n; i += 2) {
+        temp = circuit[i];
+        circuit[i] = circuit[i+1];
+        circuit[i+1] = temp;
+    }
+}
+
 void reverse(int *circuit, int n)
 {
     int temp_1;
     int temp_2;
-
-    for(int i=0; i<n; i += 2) {
-        temp_1 = circuit[i];
-        circuit[i] = circuit[i+1];
-        circuit[i+1] = temp_1;
-    }
 
     for(int i=0; i<n/2; i += 2) {
         temp_1 = circuit[i];
@@ -116,19 +121,23 @@ void synthesise_lower_triangle(int *A, int *circuit, int *counter, int n)
 /* returns an array which describes a circuit of CNOT gates that
 corresponds to a transformation described by a biadjacency matrix. 
 WARNING: caller is responsible for freeing the array. */
-int *synthesise_linear_circuit(int *matrix, int n)
+int *synthesise_linear_circuit(int *matrix, int n, int *num_cnot)
 {
     int circuit_1[n*n*2];
     int counter_1 = 0;
     int circuit_2[n*n*2];
     int counter_2 = 0;
 
+    // apply synthesis of linear reversible circuits algorithm
     synthesise_lower_triangle(matrix, circuit_1, &counter_1, n);
     transpose(matrix, n);
     synthesise_lower_triangle(matrix, circuit_2, &counter_2, n);
 
-    reverse((int *) circuit_2, counter_2);
+    // flip and reverse second half of circuit as it was transposed
+    flip_control_target(circuit_2, counter_2);
+    reverse(circuit_2, counter_2);
 
+    // concatenate two halves of circuit
     int *circuit = (int *) malloc(sizeof(int)*(counter_1+counter_2));
 
     for(int i=0; i<counter_1; i++)
@@ -136,7 +145,10 @@ int *synthesise_linear_circuit(int *matrix, int n)
 
     for(int i=0; i<counter_2; i++)
         circuit[counter_1+i] = circuit_2[i];
-    
+
+    reverse(circuit, counter_1+counter_2);
+    *num_cnot = counter_1+counter_2;
+
     return circuit;
 }
 
