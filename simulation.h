@@ -16,6 +16,7 @@ typedef struct Simulation
     cl_ulong global_mem_size;
     cl_kernel apply_gate_kernel;
     cl_kernel apply_controlled_gate_kernel;
+    cl_kernel apply_controlled_controlled_gate_kernel;
     cl_kernel measure_kernel;
     cl_kernel initialise_state_kernel;
     float *state_vector;
@@ -29,8 +30,9 @@ void print_results(Simulation *);
 void test_state_vector(float *, Simulation *);
 void deallocate_resources(Simulation *);
 void measure(Simulation *);
-void apply_controlled_gate(int, int, float *, Simulation *);
 void apply_gate(int, float *, Simulation *);
+void apply_controlled_gate(int, int, float *, Simulation *);
+void apply_controlled_controlled_gate(int, int, int, float *, Simulation *);
 void initialise_qubits(int, Simulation *);
 Simulation *set_up_simulation(void);
 

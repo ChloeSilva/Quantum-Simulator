@@ -3,6 +3,7 @@
 
 #include "zx_graph.h"
 
+void flip_control_target(int *, int);
 void reverse(int *, int);
 void transpose(int *, int);
 int bin_to_int(int *, int);

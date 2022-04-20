@@ -1425,6 +1425,9 @@ void test_extract_clifford()
     assert(gate_12->target == 0);
     assert(gate_12->control == 3);
 
+    free_circuit(circuit);
+    free_graph(graph);
+
     printf("Pass\n");
 }
 

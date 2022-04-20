@@ -2,6 +2,7 @@
 #define PROGRAM_FILE "program.cl"
 #define APPLY_GATE_FUNC "apply_gate"
 #define APPLY_CGATE_FUNC "apply_controlled_gate"
+#define APPLY_CCGATE_FUNC "apply_controlled_controlled_gate"
 #define MEASURE_FUNC "measure"
 #define INITIALISE_FUNC "initialise_state"
 
@@ -83,6 +84,90 @@ void measure(Simulation *simulation)
     }
     
     return;
+}
+
+void apply_controlled_controlled_gate(int target, int control_1, int control_2,
+    float *gate, Simulation *simulation)
+{
+    cl_int error;
+    float *a, *b, *c, *d;
+    const size_t num_op = simulation->num_amp;
+
+    a = (float *) malloc(sizeof(float)*2);
+    a[0] = gate[0];
+    a[1] = gate[1];
+
+    b = (float *) malloc(sizeof(float)*2);
+    b[0] = gate[2];
+    b[1] = gate[3];
+    
+    c = (float *) malloc(sizeof(float)*2);
+    c[0] = gate[4];
+    c[1] = gate[5];
+
+    d = (float *) malloc(sizeof(float)*2);
+    d[0] = gate[6];
+    d[1] = gate[7];
+    
+    // Set kernel arguments for apply_controlled_gate
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        1, sizeof(int), &control_1);
+
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        2, sizeof(int), &control_2);
+    
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's controlled argument");
+        exit(1);
+    }
+    
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        3, sizeof(int), &target);
+    
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's target argument");
+        exit(1);
+    }
+
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        4, sizeof(float)*2, a);
+    
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's a argument");
+        exit(1);
+    }
+
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        5, sizeof(float)*2, b);
+    
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's b argument");
+        exit(1);
+    }
+
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        6, sizeof(float)*2, c);
+    
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's c argument");
+        exit(1);
+    }
+
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+        7, sizeof(float)*2, d);
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's d argument");
+        exit(1);
+    }
+
+    clEnqueueNDRangeKernel(simulation->queue, 
+        simulation->apply_controlled_controlled_gate_kernel, 
+        1, NULL, &num_op, NULL, 0, NULL, NULL);
+
+    free(a);
+    free(b);
+    free(c);
+    free(d);
 }
 
 void apply_controlled_gate(int target, int controlled, float *gate,
@@ -282,6 +367,13 @@ void initialise_qubits(int num_qubits, Simulation *simulation)
         exit(1);
     }
 
+    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 0,
+        sizeof(cl_mem), &simulation->state_vector_buffer);
+    if(error < 0) {
+        perror("Couldn't set apply_controlled_controlled_gate's state_vector argument");
+        exit(1);
+    }
+
     // Set kernel arguments for measure
     error = clSetKernelArg(simulation->measure_kernel, 0, 
         sizeof(cl_mem), &simulation->state_vector_buffer);
@@ -451,6 +543,14 @@ Simulation *set_up_simulation()
         APPLY_CGATE_FUNC, &error);
     if(error < 0) {
         perror("Couldn't create the apply controlled gate kernel");
+        exit(1);
+    }
+
+    // Create kernel for the apply_controlled_controlled_gate function
+    simulation->apply_controlled_controlled_gate_kernel = 
+        clCreateKernel(simulation->program, APPLY_CCGATE_FUNC, &error);
+    if(error < 0) {
+        perror("Couldn't create the apply controlled controlled gate kernel");
         exit(1);
     }
 

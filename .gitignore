@@ -63,3 +63,6 @@ test_circuit
 
 # Personal notes
 *.txt
+
+# VSCode
+.vscode/

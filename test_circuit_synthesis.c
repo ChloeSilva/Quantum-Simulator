@@ -13,6 +13,75 @@ void assert(int status)
     exit(EXIT_FAILURE);
 }
 
+void test_reverse()
+{
+    printf("Testing reverse: ");
+
+    // given
+    int numbers[10] = {0,1,2,3,4,5,6,7,8,9};
+
+    // when
+    flip_control_target(numbers, 10);
+    reverse(numbers, 10);
+
+    // then
+    int test_numbers[10] = {9,8,7,6,5,4,3,2,1,0};
+
+    for(int i=0; i<10; i++)
+        assert(numbers[i] == test_numbers[i]);
+
+    printf("Pass\n");
+}
+
+void test_transpose()
+{
+    printf("Testing transpose: ");
+
+    // given
+    int matrix[6][6] = {{1,1,0,0,0,0},
+                        {1,0,0,1,1,0},
+                        {0,1,0,0,1,0},
+                        {1,1,1,1,1,1},
+                        {1,1,0,1,1,1},
+                        {0,0,1,1,1,0}};
+
+    // when
+    transpose((int *) matrix, 6);
+
+    // then
+    int test_matrix[6][6] = {{1,1,0,1,1,0},
+                             {1,0,1,1,1,0},
+                             {0,0,0,1,0,1},
+                             {0,1,0,1,1,1},
+                             {0,1,1,1,1,1},
+                             {0,0,0,1,1,0}};
+
+    for(int i=0; i<6; i++)
+        for(int j=0; j<6; j++)
+            assert(matrix[i][j] == test_matrix[i][j]);
+
+    printf("Pass\n");
+}
+
+void test_bin_to_int()
+{
+    printf("Testing bin_to_int: ");
+
+    // given
+    int seven[3] = {1,1,1};
+    int nineteen[5] = {1,0,0,1,1};
+
+    // when
+    int seven_result = bin_to_int(seven, 3);
+    int nineteen_result = bin_to_int(nineteen, 5);
+
+    // then
+    assert(seven_result == 7);
+    assert(nineteen_result == 19);
+
+    printf("Pass\n");
+}
+
 void test_synthesise_linear_circuit()
 {
     printf("Testing synthesise_linear_circuit: ");
@@ -122,6 +191,9 @@ int main()
 {
     printf("\033[1;32m");
 
+    test_reverse();
+    test_transpose();
+    test_bin_to_int();
     test_synthesise_linear_circuit();
     test_get_biadjacency_matrix();
 
