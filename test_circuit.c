@@ -32,10 +32,10 @@ void test_initialise_gate()
 {
     printf("Testing initialise_gate: ");
 
-    Gate *gate = initialise_gate(NOT, 0, 1, true);
+    Gate *gate = initialise_gate(X, 0, 1, true);
 
     // test gate
-    assert(gate->type == NOT);
+    assert(gate->type == X);
     assert(gate->target == 0);
     assert(gate->control == 1);
     assert(gate->isControlled);
@@ -84,11 +84,11 @@ void test_add_controlled_gate()
     printf("Testting add_controlled_gate: ");
 
     Circuit *circuit = initialise_circuit(2);
-    add_controlled_gate(NOT, 0, 1, circuit);
+    add_controlled_gate(X, 0, 1, circuit);
 
     // test gate has been added to circuit
     Gate *gate = circuit->steps->last->gates[0];
-    assert(gate->type == NOT);
+    assert(gate->type == X);
     assert(gate->target == 0);
     assert(gate->control == 1);
     assert(gate->isControlled);

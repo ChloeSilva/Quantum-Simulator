@@ -9,18 +9,34 @@
 #include <math.h>
 #include <string.h>
 
+/**
+ * @brief Initialises new zx-graph node corresponding to the given gate.
+ * Used to convert a quantum circuit to a zx-diagram
+ * 
+ * @param gate The gate to be converted
+ * @param graph The graph to add the node to
+ * @return pointer to the new node
+ */
 Node *initialise_node(Gate *gate, ZXGraph *graph)
 {
     if(gate->type == HADAMARD)
         return initialise_hadamard(graph);
 
-    if(gate->type == NOT)
+    if(gate->type == X)
         return initialise_spider(RED, (float) 1.0, graph);
 
     fprintf(stderr, "error: invalid gate type.\n");
     exit(EXIT_FAILURE);
 }
 
+/**
+ * @brief converts circuit to zx-graph.
+ * Goes through each time step in the circuit and adds the nodes corresponding
+ * to its gates to the zx-diagram. 
+ * WARNING: caller must free returned graph with the free_graph() function
+ * @param circuit The circuit to be converted to a zx-graph
+ * @return pointer the zx-graph corresponding to the given circuit
+ */
 ZXGraph *circuit_to_zx_graph(Circuit *circuit)
 {
     Node *frontier[circuit->num_qubits];
@@ -62,6 +78,13 @@ ZXGraph *circuit_to_zx_graph(Circuit *circuit)
     return graph;
 }
 
+/**
+ * @brief Removes all z-spiders from a given zx-diagram.
+ * For each spider in the graph, checks if it is a z-spider, if so,
+ * applies the color change rewrite rule
+ * 
+ * @param graph The graph from which z-spiders wish to be removed
+ */
 void remove_z_spiders(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++) {
@@ -71,16 +94,24 @@ void remove_z_spiders(ZXGraph *graph)
     }
 }
 
+/**
+ * @brief Removes double hadamards box from graph.
+ * Checks if a node is a hadamard box, if so checks if any of its neighbours
+ * are hadamard boxes and removes both if this is the case.
+ * 
+ * @param node The node to potentially remove
+ * @param graph The graph the node belongs to
+ * @return true if a double hadamard was present and removed
+ * @return false if double hadamard was not present
+ */
 bool remove_double_hadamard(Node *node, ZXGraph *graph)
 {
-    // removes double hadamard if present
-    // returns true if present and false otherwise
     if(node->type != HADAMARD_BOX)
         return false;
 
     for(int i=0; i<node->edge_count; i++) {
         Node *neighbour = get_node(node->edges[i], graph);
-        if(neighbour->type == HADAMARD_BOX) {
+        if(neighbour->type == HADAMARD_BOX && neighbour->id != node->id) {
             apply_id2(node, neighbour, graph);
             return true;
         }
@@ -88,10 +119,18 @@ bool remove_double_hadamard(Node *node, ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Fuses given spider with neighbouring spider if possible.
+ * Checks if node is spider, if so checks if it has a spider neighbour.
+ * If this is the case, applies the fusion re-write rule to fuse the two spiders.
+ * 
+ * @param node The node to be checked
+ * @param graph The graph the node belongs to 
+ * @return true if two spiders are present and were fused
+ * @return false if two spiders are not preesent
+ */
 bool fuse_adjacent_spiders(Node *node, ZXGraph *graph)
 {
-    // fuses spider with adjacent spider if present
-    // returns true if present and false otherwises
     if(node->type != SPIDER)
         return false;
 
@@ -105,6 +144,12 @@ bool fuse_adjacent_spiders(Node *node, ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Ensures all edges in given zx-graph are hadamard edges.
+ * Applies remove_double_hadamard() and fuse_adjacent_spiders() to achieve this.
+ * 
+ * @param graph The zx-graph to add hadamard edges to
+ */
 void add_hadamard_edges(ZXGraph *graph)
 {
     // remove double hadamard from graph using id2 rule
@@ -125,11 +170,17 @@ void add_hadamard_edges(ZXGraph *graph)
                 complete = false;
     }
 }
-
+/**
+ * @brief Removes self loop in node if present.
+ * Applies re-write rule b to remove self loop.
+ * 
+ * @param node The node to check
+ * @param graph The graph the node belongs to
+ * @return true if a self loop was present and removed
+ * @return false if a self loop was not present
+ */
 bool remove_self_loops(Node *node, ZXGraph *graph)
 {
-    // removes self loop if present
-    // returns true if present and false otherwise
     if(node->type != SPIDER)
         return false;
 
@@ -144,6 +195,15 @@ bool remove_self_loops(Node *node, ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief removes self loops with a hadamard.
+ * Applies re-write rule c to remove hadamard self loops
+ * 
+ * @param node The node to check
+ * @param graph The graph the node belongs to
+ * @return true if a hadamard self loop was present and removed
+ * @return false if a hadmard self loop was not present
+ */
 bool remove_hadamard_self_loops(Node *node, ZXGraph *graph)
 {
     // removes self loop with hadamard edge if present
@@ -164,6 +224,15 @@ bool remove_hadamard_self_loops(Node *node, ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Removes parallel edges from given node if present.
+ * Applies re-write rule a to remove parallel edges.
+ * 
+ * @param node The node to check for parallel edges
+ * @param graph The graph the node belongs to
+ * @return true if parallel edges were present and removed
+ * @return false if parallel edges were not present
+ */
 bool remove_parallel_edges(Node *node, ZXGraph *graph)
 {
     // removes parallel hadamard edges if present
@@ -188,6 +257,13 @@ bool remove_parallel_edges(Node *node, ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Cleans edges of all nodes in graph.
+ * Applies re-write rules a, b, and c, to clean edges of given zx-graph.
+ * Used to turn zx-graph to graph-like
+ * 
+ * @param graph The graph to clean
+ */
 void clean_edges(ZXGraph *graph)
 {
     // remove self loops
@@ -218,6 +294,13 @@ void clean_edges(ZXGraph *graph)
     }
 }
 
+/**
+ * @brief Cleans input and ouput of given graph.
+ * Ensures inputs and outputs are each connected to exacly 1 z-spider.
+ * Used to turn zx-diagram into graph-like
+ * 
+ * @param graph The graph to clean
+ */
 void clean_io(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_qubits; i++) {
@@ -279,6 +362,14 @@ void clean_io(ZXGraph *graph)
     }
 }
 
+/**
+ * @brief Turns arbitrary zx-graph to graph-like
+ * Applies remove_z_spiders(), add_hadamard_edges(), clean_edges(),
+ * and clean_io() to turn zx-graph to zx-diagram
+ * 
+ * @param graph The graph to be turned to graph-like
+ * @return pointer to graph-like zx-graph
+ */
 void *to_graph_like(ZXGraph *graph)
 {
     remove_z_spiders(graph);
@@ -289,6 +380,15 @@ void *to_graph_like(ZXGraph *graph)
     return graph;
 }
 
+/**
+ * @brief Removes a proper clifford from given zx-graph if present.
+ * Implements step 1 of the simplification procedure.
+ * Applies derived rule 1 to remove spider.
+ * 
+ * @param graph The graph which is being simplified
+ * @return true if a proper clifford spider was present and removed
+ * @return false if a proper clifford spider was not present
+ */
 bool remove_proper_clifford(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++) {
@@ -310,6 +410,15 @@ bool remove_proper_clifford(ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Removes a pair of adjacent Pauli spiders from given graph if present.
+ * Implements step 2 of the simplification procedure.
+ * Applies derived rule 2 to remove both Pauli spiders.
+ * 
+ * @param graph The graph from which to remove the Pauli pair
+ * @return true if a Pauli pair was present and removed
+ * @return false if a Pauli pair was not present
+ */
 bool remove_adjacent_pauli(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++) {
@@ -347,6 +456,14 @@ bool remove_adjacent_pauli(ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Removes boundary Pauli spider from given graph if present.
+ * Implements step 3 of the simplification procedure.
+ * 
+ * @param graph The graph from which to remove the boundary Pauli
+ * @return true if boundary Pauli was present and removed
+ * @return false if boundary Pauli was not present
+ */
 bool remove_boundary_pauli(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++) {
@@ -381,6 +498,13 @@ bool remove_boundary_pauli(ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief simplifies graph-like zx-diagram.
+ * Applies derived rules 1 and 2 to remove interior proper Clifford spiders,
+ * adjacent pairs of interior Pauli spiders and boundary Pauli spiders
+ * 
+ * @param graph The graph-like zx-graph to be simplified
+ */
 void simplify_graph_like(ZXGraph *graph)
 {
     bool complete = false;
@@ -388,22 +512,29 @@ void simplify_graph_like(ZXGraph *graph)
         complete = true;
         
         if(remove_proper_clifford(graph)) {
-            clean_edges(graph);
+            //clean_edges(graph);
             complete = false;
         }
        
         if(remove_adjacent_pauli(graph)) {
-            clean_edges(graph);
+            //clean_edges(graph);
             complete = false;
         }
             
         if(remove_boundary_pauli(graph)) {
-            clean_edges(graph);
+            //clean_edges(graph);
             complete = false;
         }
+        clean_edges(graph);
     }
 }
 
+/**
+ * @brief Adds the control z layer in the circuit extraction procedure
+ * 
+ * @param circuit The circuit being synthesised
+ * @param graph The graph being converted
+ */
 void add_cz_layer(Circuit *circuit, ZXGraph *graph)
 {
     // Create an array that returns the qubit a node acts on
@@ -430,7 +561,12 @@ void add_cz_layer(Circuit *circuit, ZXGraph *graph)
         }
     }
 }
-
+/**
+ * @brief Adds the control not layer in the circuit extraction procedure
+ * 
+ * @param circuit The circuit being synthesised
+ * @param graph The graph being converted
+ */
 void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
 {
     int size = graph->num_qubits;
@@ -444,7 +580,7 @@ void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
     
     // add cnot gates to circuit
     for(int i=0; i<cnot_layer_size; i+=2)
-        add_controlled_gate(NOT, cnot_layer[i+1], cnot_layer[i], circuit);
+        add_controlled_gate(X, cnot_layer[i+1], cnot_layer[i], circuit);
 
     // remove spiders from graph
     for(int i=0; i<size; i++) {
@@ -470,6 +606,11 @@ void add_cnot_layer(Circuit *circuit, ZXGraph *graph)
     free(cnot_layer);
 }
 
+/**
+ * @brief Adds the hadamard layer in the circuit extraction procedure
+ * 
+ * @param circuit the circuit being synthesised
+ */
 void add_hadamard_layer(Circuit *circuit)
 {
     // add hadamards to circuit
@@ -477,7 +618,14 @@ void add_hadamard_layer(Circuit *circuit)
         add_gate(HADAMARD, i, circuit);
 }
 
-Circuit *extract_clifford(ZXGraph *graph)
+/**
+ * @brief Converts a given simplified graph-like graph to a circuit.
+ * Creates control-z control-not and hadamard layers to create corresponding circuit.
+ * 
+ * @param graph The graph to be converteed
+ * @return The synthesised circuit
+ */
+Circuit *extract_circuit(ZXGraph *graph)
 {
     Circuit *circuit = initialise_circuit(graph->num_qubits);
 

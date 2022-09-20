@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef enum {HADAMARD, NOT, Z, CONTROL, NONE} GateType;
+typedef enum {HADAMARD, X, Y, Z, CONTROL, NONE} GateType;
 
 typedef struct Gate
 {

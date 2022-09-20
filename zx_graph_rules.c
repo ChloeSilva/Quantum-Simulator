@@ -6,6 +6,13 @@
 #include <string.h>
 #include <stdbool.h>
 
+/**
+ * @brief Applies the fusion rule of zx-calculus.
+ * 
+ * @param node_1 first node to be fused
+ * @param node_2 second node to be fused
+ * @param graph graph nodes belong to
+ */
 void apply_fusion(Node *node_1, Node *node_2, ZXGraph *graph)
 {
     if(node_1->type != SPIDER || node_2->type != SPIDER) {
@@ -17,8 +24,6 @@ void apply_fusion(Node *node_1, Node *node_2, ZXGraph *graph)
         fprintf(stderr, "error: can only fuse spiders of the same color.\n");
         exit(EXIT_FAILURE);
     }
-
-    //TODO: check node 1 and node 2 are connected
 
     // Add edges between node 1 and node 2's neighbours
     int node_2_edge_count = node_2->edge_count;
@@ -40,6 +45,12 @@ void apply_fusion(Node *node_1, Node *node_2, ZXGraph *graph)
         
 }
 
+/**
+ * @brief Applies color change rule of zx-calculus
+ * 
+ * @param node The node to bee changed
+ * @param graph The graph the node belongs to
+ */
 void apply_color_change(Node *node, ZXGraph *graph)
 {
     int edge_count = node->edge_count;
@@ -58,6 +69,14 @@ void apply_color_change(Node *node, ZXGraph *graph)
     change_color(node);
 }
 
+/**
+ * @brief Applies the id 1 rule of zx-calculus
+ * 
+ * @param node_1 The node to the left of the new node
+ * @param node_2 The node to the right of the new node
+ * @param color The color of the new node
+ * @param graph The grapht the node belongs to
+ */
 void apply_id1(Node *node_1, Node *node_2, Color color, ZXGraph *graph)
 {
     Node *spider = initialise_spider(color, 0.0, graph);
@@ -65,6 +84,13 @@ void apply_id1(Node *node_1, Node *node_2, Color color, ZXGraph *graph)
     insert_node(spider, node_1, node_2);
 }
 
+/**
+ * @brief Applies the id 2 rule of zx-calculus
+ * 
+ * @param hadamard_1 The first hadamard to remove
+ * @param hadamard_2 The second hadamard to remove
+ * @param graph The graph to remove them from
+ */
 void apply_id2(Node *hadamard_1, Node *hadamard_2, ZXGraph *graph)
 {
     Node *node_1, *node_2;
@@ -87,6 +113,12 @@ void apply_id2(Node *hadamard_1, Node *hadamard_2, ZXGraph *graph)
     add_edge(node_1, node_2);
 }
 
+/**
+ * @brief Complements the edges of a node.
+ * 
+ * @param node The node to be processed
+ * @param graph The graph the node belongs to
+ */
 void complement_edges(Node *node, ZXGraph *graph)
 {
     Node **neighbours = get_hadamard_edge_spiders(node, graph);
@@ -115,6 +147,12 @@ void complement_edges(Node *node, ZXGraph *graph)
     free(neighbours);
 }
 
+/**
+ * @brief Applies derived rule 1 of zx-calculus
+ * 
+ * @param node The node to complement by
+ * @param graph The graph to be complemented
+ */
 void apply_local_complement(Node *node, ZXGraph *graph)
 {
     // Update phases
@@ -140,6 +178,13 @@ void apply_local_complement(Node *node, ZXGraph *graph)
     remove_node(node, graph);
 }
 
+/**
+ * @brief Applies derived rule 2 of zx-calculus.
+ * 
+ * @param node_1 The node to the right of the edge to pivot by
+ * @param node_2 The node to the left of the edge to pivot by
+ * @param graph The graph to be pivotted
+ */
 void apply_pivot(Node *node_1, Node *node_2, ZXGraph *graph)
 {
     // Update phases
@@ -185,6 +230,14 @@ void apply_pivot(Node *node_1, Node *node_2, ZXGraph *graph)
     remove_node(node_2, graph);
 }
 
+/**
+ * @brief Extracts the boundary Paulit spider.
+ * Used in step 3 of the simplification algorithm.
+ * 
+ * @param node The node to extract
+ * @param graph The graph to exract it from
+ * @return pointer to the new phase node
+ */
 Node *extract_boundary(Node *node, ZXGraph *graph)
 {
     Node *io_node;

@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * @brief Initialises new circuit.
+ * Allocates memory for all its members and sets their default values.
+ * 
+ * @param size The number of qubits in the circuit
+ * @return pointer to the new circuit
+ */
 Circuit *initialise_circuit(int size)
 {
     // initialise circuit
@@ -14,6 +21,7 @@ Circuit *initialise_circuit(int size)
 
     // set member data
     circuit->num_qubits = size;
+    circuit->num_gates = 0;
     circuit->steps = initialise_time_list();
 
     add_time_step(circuit);
@@ -21,6 +29,16 @@ Circuit *initialise_circuit(int size)
     return circuit;
 }
 
+/**
+ * @brief Initialises new gate.
+ * Allocates memory for all its members and sets their default values
+ * 
+ * @param type The type of gate (eg hadamard)
+ * @param target The target to which the gate is applied
+ * @param control The control qubit if present, -1 otherwise
+ * @param isControlled true if the gate is controlled, false otherwise
+ * @return Gate* 
+ */
 Gate *initialise_gate(GateType type, int target, int control, bool isControlled)
 {
     // initialise gate
@@ -39,6 +57,12 @@ Gate *initialise_gate(GateType type, int target, int control, bool isControlled)
     return gate;
 }
 
+/**
+ * @brief frees the circuit and all its associated data structes.
+ * (i.e. gates, steps, timelist)
+ * 
+ * @param circuit The circuit to free
+ */
 void free_circuit(Circuit *circuit)
 {
     TimeStep *next;
@@ -57,6 +81,11 @@ void free_circuit(Circuit *circuit)
     free(circuit);
 }
 
+/**
+ * @brief Adds a new time step to the circuit.
+ * 
+ * @param circuit the circuit to add a time step to
+ */
 void add_time_step(Circuit *circuit)
 {
     // allocate memory for gates at the new time step
@@ -74,6 +103,13 @@ void add_time_step(Circuit *circuit)
     append_time_step(circuit->steps, gate_slots);
 }
 
+/**
+ * @brief Adds a gate to the given circuit.
+ * 
+ * @param type The type of the gate
+ * @param target The target qubit for the gate
+ * @param circuit The circuit to add the gate to
+ */
 void add_gate(GateType type, int target, Circuit *circuit)
 {
     // check the target bit exits in the circuit
@@ -91,10 +127,19 @@ void add_gate(GateType type, int target, Circuit *circuit)
 
     // add gate to circuit
     gate_slot = circuit->steps->last->gates;
+    circuit->num_gates++;
     free(gate_slot[target]);
     gate_slot[target] = gate;
 }
 
+/**
+ * @brief adds a controlled gate to the given circuit.
+ * 
+ * @param type The type of the gate
+ * @param target The target qubit for the gate
+ * @param control The control qubit for the gate
+ * @param circuit The circuit to add a controlled gate to
+ */
 void add_controlled_gate(GateType type, int target, int control, Circuit *circuit)
 {
     // check if target and control bits exit in the circuit
@@ -104,7 +149,7 @@ void add_controlled_gate(GateType type, int target, int control, Circuit *circui
     }
 
     if(control >= circuit->num_qubits) {
-        fprintf(stderr, "error: target bit is not in circuit.\n");
+        fprintf(stderr, "error: control bit is not in circuit.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -125,6 +170,7 @@ void add_controlled_gate(GateType type, int target, int control, Circuit *circui
 
     // add gate to circuit
     gate_slot = circuit->steps->last->gates;
+    circuit->num_gates++;
     free(gate_slot[target]);
     free(gate_slot[control]);
     gate_slot[target] = target_gate;

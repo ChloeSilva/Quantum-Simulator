@@ -4,6 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Initialises new time step for circuit.
+ * Allocates memory and sets default values for its members.
+ * 
+ * @return pointerr to new time step
+ */
 TimeStep *initialise_time_step(void)
 {
 	TimeStep *timeStep;
@@ -18,6 +24,11 @@ TimeStep *initialise_time_step(void)
 	return timeStep;
 }
 
+/**
+ * @brief Frees a time step.
+ * 
+ * @param timeStep the time step to be freed
+ */
 void free_time_step(TimeStep *timeStep)
 {
 	if(!timeStep)
@@ -25,6 +36,12 @@ void free_time_step(TimeStep *timeStep)
 	free(timeStep);
 }
 
+/**
+ * @brief Initialises a time list.
+ * Allocates memory and sets default values for its members.
+ * 
+ * @return pointer to new time list
+ */
 TimeList *initialise_time_list(void)
 {
 	TimeList *list;
@@ -38,6 +55,11 @@ TimeList *initialise_time_list(void)
 	return list;
 }
 
+/**
+ * @brief Frees time list and all its time steps.
+ * 
+ * @param list to be freed.
+ */
 void free_time_list(TimeList *list)
 {
 	TimeStep *next;
@@ -50,6 +72,12 @@ void free_time_list(TimeList *list)
 	free(list);
 }
 
+/**
+ * @brief Appends time step to the list
+ * 
+ * @param list The list to append to
+ * @param gates The gates at the time of the time slot
+ */
 void append_time_step(TimeList *list, Gate **gates)
 {
 	TimeStep *node;
@@ -66,6 +94,12 @@ void append_time_step(TimeList *list, Gate **gates)
 		list->first = node;
 }
 
+/**
+ * @brief prepends time step to the list
+ * 
+ * @param list The list to prepend to
+ * @param gates The gates at the time of the time slot
+ */
 void prepend_time_step(TimeList *list, Gate **gates)
 {
 	TimeStep *node;
@@ -82,6 +116,13 @@ void prepend_time_step(TimeList *list, Gate **gates)
 		list->last = node;
 }
 
+/**
+ * @brief Removes the first time step of the list and frees all
+ * unnecessary resources.
+ * 
+ * @param list The list of gates in the time list
+ * @param num_gates The number of gates in each time slot
+ */
 void remove_first_time_step(TimeList *list, int num_gates)
 {
 	TimeStep *first;
@@ -103,6 +144,13 @@ void remove_first_time_step(TimeList *list, int num_gates)
 
 }
 
+/**
+ * @brief Removes the last time step of the list and freees all
+ * unnecessary resources.
+ * 
+ * @param list Thee list of gates in the time list
+ * @param num_gates The number of gates in each timee slot
+ */
 void remove_last_time_step(TimeList *list, int num_gates)
 {
 	TimeStep *last;

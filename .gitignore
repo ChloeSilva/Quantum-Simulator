@@ -60,6 +60,9 @@ test_simplify
 test_zx_graph
 test_zx_graph_rules
 test_circuit
+test_circuit_synthesis
+grover
+shor
 
 # Personal notes
 *.txt

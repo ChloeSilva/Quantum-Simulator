@@ -6,6 +6,13 @@
 #include <stdbool.h>
 #include <math.h>
 
+/**
+ * @brief Initialises new zx-graph.
+ * Allocates memory for new members and sets their default values.
+ * 
+ * @param size the number of qubits in the graph
+ * @return pointer to the graph
+ */
 ZXGraph *initialise_graph(int size)
 {
     ZXGraph *graph;
@@ -77,6 +84,12 @@ ZXGraph *initialise_graph(int size)
     return graph;
 }
 
+/**
+ * @brief Initialises input node
+ * Allocates memory for new members and sets their default values.
+ * 
+ * @return pointer to the node
+ */
 Node *initialise_input()
 {
     Node *node;
@@ -113,6 +126,13 @@ Node *initialise_output()
     return node;
 }
 
+/**
+ * @brief Initialises new hadamard node.
+ * Allocates memory for new members and sets their default values.
+ * 
+ * @param graph 
+ * @return Node* 
+ */
 Node *initialise_hadamard(ZXGraph *graph)
 {
     Node *hadamard;
@@ -147,6 +167,15 @@ Node *initialise_hadamard(ZXGraph *graph)
     return hadamard;
 }
 
+/**
+ * @brief Initialises new spider node
+ * Allocates memory for new members and sets their default values.
+ * 
+ * @param color the color of the spider node
+ * @param phase the phase of the spider node
+ * @param graph the graph the node belongs to
+ * @return pointer to the node
+ */
 Node *initialise_spider(Color color, float phase, ZXGraph *graph)
 {
     Node *spider;
@@ -183,6 +212,13 @@ Node *initialise_spider(Color color, float phase, ZXGraph *graph)
     return spider;
 }
 
+/**
+ * @brief Returns the node of a graph given its id.
+ * 
+ * @param id The id of the node
+ * @param graph the graph the node belongs to
+ * @return pointer to the node
+ */
 Node *get_node(int id, ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++)
@@ -193,6 +229,11 @@ Node *get_node(int id, ZXGraph *graph)
     exit(EXIT_FAILURE);
 }
 
+/**
+ * @brief Frees node.
+ * 
+ * @param node The node to be freed.
+ */
 void free_node(Node *node)
 {
     if(node->edge_count)
@@ -201,6 +242,11 @@ void free_node(Node *node)
     free(node);
 }
 
+/**
+ * @brief Frees graph and all its member variables.
+ * 
+ * @param graph The graph to be freed.
+ */
 void free_graph(ZXGraph *graph)
 {
     for(int i=0; i<graph->num_nodes; i++)
@@ -212,6 +258,12 @@ void free_graph(ZXGraph *graph)
     free(graph);
 }
 
+/**
+ * @brief Changes the color of a node.
+ * Checks if the node is a spider and declare error if not. 
+ * 
+ * @param node the node to be changed
+ */
 void change_color(Node *node)
 {
     if(node->type != SPIDER) {
@@ -222,6 +274,13 @@ void change_color(Node *node)
     node->color = node->color == RED ? GREEN : RED;
 }
 
+/**
+ * @brief Changes the phase of a node.
+ * Checks if the node is a spider and declare error if not.
+ * 
+ * @param node the node to be changed
+ * @param phase the new phase of the node
+ */
 void change_phase(Node *node, float phase)
 {
     if(node->type != SPIDER) {
@@ -232,6 +291,13 @@ void change_phase(Node *node, float phase)
     node->phase = phase;
 }
 
+/**
+ * @brief Adds a float to a node's phase.
+ * Checks if the node is a spider and declare error if not.
+ * 
+ * @param node 
+ * @param phase 
+ */
 void add_phase(Node *node, float phase)
 {
     if(node->type != SPIDER) {
@@ -242,6 +308,12 @@ void add_phase(Node *node, float phase)
     node->phase += phase;
 }
 
+/**
+ * @brief Adds edge beetween 2 nodes.
+ * 
+ * @param node_1 pointer to the first node
+ * @param node_2 pointer to the second node
+ */
 void add_edge(Node *node_1, Node *node_2)
 {
     int *new_edges;
@@ -267,6 +339,13 @@ void add_edge(Node *node_1, Node *node_2)
     node_2->edge_count++;
 }
 
+/**
+ * @brief Removes an edge between 2 nodes.
+ * Checks if edge exists and declares error if not.
+ * 
+ * @param node_1 pointer to the first node
+ * @param node_2 pointer to the second node
+ */
 void remove_edge(Node *node_1, Node *node_2)
 {
     int *new_edges;
@@ -323,6 +402,12 @@ void remove_edge(Node *node_1, Node *node_2)
     node_2->edge_count--;
 }
 
+/**
+ * @brief Removes node from zx-graph and frees graph.
+ * 
+ * @param node the node to be freed.
+ * @param graph the graph from which to free it.
+ */
 void remove_node(Node *node, ZXGraph *graph)
 {
     // Remove edges to all connected nodes
@@ -350,6 +435,14 @@ void remove_node(Node *node, ZXGraph *graph)
     graph->num_nodes--;
 }
 
+/**
+ * @brief Inserts node btween two other nodes.
+ * Useful for building test graphs
+ * 
+ * @param node node to be added
+ * @param left_node node to the left of the node to be added
+ * @param right_node node to the right of the node to be added
+ */
 void insert_node(Node *node, Node *left_node, Node *right_node)
 {
     add_edge(node, left_node);
@@ -357,6 +450,13 @@ void insert_node(Node *node, Node *left_node, Node *right_node)
     remove_edge(left_node, right_node);
 }
 
+/**
+ * @brief Checks if two nodes are connected
+ * 
+ * @param node_1 First node to be checked
+ * @param node_2 Second node to be checked
+ * @return true if they are connected, false otherwise
+ */
 int is_connected(Node *node_1, Node *node_2)
 {
     for(int i=0; i<node_1->edge_count; i++)
@@ -366,6 +466,13 @@ int is_connected(Node *node_1, Node *node_2)
     return false;
 }
 
+/**
+ * @brief Checks if a node is connected to an input of output.
+ * 
+ * @param node The node to be checcked
+ * @param graph The graph the node belongs to
+ * @return true if it is connected, false otherwise
+ */
 int is_connected_io(Node *node, ZXGraph *graph)
 {
     for(int i=0; i<node->edge_count; i++) {
@@ -377,6 +484,12 @@ int is_connected_io(Node *node, ZXGraph *graph)
     return false;
 }
 
+/**
+ * @brief Checks if node is red.
+ * 
+ * @param node Node to be checked
+ * @return true if it is red, false if it's not
+ */
 int is_red(Node *node)
 {
     if(node->type == SPIDER)
@@ -386,6 +499,13 @@ int is_red(Node *node)
     return false;
 }
 
+/**
+ * @brief Checks if node is proper clifford.
+ * Checks if node is spider and declares error if not.
+ * 
+ * @param node The Node to be checked
+ * @return true if it is proper clifford, false if it's not
+ */
 int is_proper_clifford(Node *node)
 {
     if(node->type != SPIDER) {
@@ -402,6 +522,13 @@ int is_proper_clifford(Node *node)
     return false;
 }
 
+/**
+ * @brief Checks if node is Pauli.
+ * Checks if node is spider and declarese error if not.
+ * 
+ * @param node The Node to be checked
+ * @return true if it is pauli, false if it's not
+ */
 int is_pauli(Node *node)
 {
     if(node->type != SPIDER) {
@@ -415,6 +542,15 @@ int is_pauli(Node *node)
     return false;
 }
 
+/**
+ * @brief Removes hadamard edges.
+ * 
+ * @warning Check if return is NULL beforee using
+ * @param node_1 First node
+ * @param node_2 Second node
+ * @param pointer to the hadamard if the nodes are connected to a hadamard edge,
+ * NULL othewise
+ */
 void remove_hadamard_edges(Node *node_1, Node *node_2, ZXGraph *graph)
 {
     int edge_count = node_1->edge_count;
@@ -429,8 +565,15 @@ void remove_hadamard_edges(Node *node_1, Node *node_2, ZXGraph *graph)
     }
 }
 
-// returns hadamard connecting nodes
-// return NULL if nodes are not connected by a hadamard edge
+/**
+ * @brief Gets the hadamard between two spiders.
+ * 
+ * @warning Check if return is NULL beforee using
+ * @param node_1 First node
+ * @param node_2 Second node
+ * @param pointer to the hadamard if the nodes are connected to a hadamard edge,
+ * NULL othewise
+ */
 Node *get_hadamard_edge(Node *node_1, Node *node_2, ZXGraph *graph)
 {
     for(int i=0; i<node_1->edge_count; i++) {
@@ -446,8 +589,12 @@ Node *get_hadamard_edge(Node *node_1, Node *node_2, ZXGraph *graph)
     return NULL;
 }
 
-// returns array of spiders connected to node by a hadamard edge
-// WARNING: caller is responsible for freeing the array
+/**
+ * @brief Gets an array of hadamards connected to a spider.
+ * 
+ * @param node the node
+ * @param pointer to the graph the node belongs to
+ */
 Node **get_hadamard_edge_spiders(Node *node, ZXGraph *graph)
 {
     Node **spiders = (Node **) calloc(node->edge_count, sizeof(Node *));

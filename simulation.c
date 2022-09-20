@@ -2,7 +2,7 @@
 #define PROGRAM_FILE "program.cl"
 #define APPLY_GATE_FUNC "apply_gate"
 #define APPLY_CGATE_FUNC "apply_controlled_gate"
-#define APPLY_CCGATE_FUNC "apply_controlled_controlled_gate"
+#define APPLY_CCGATE_FUNC "apply_double_controlled_gate"
 #define MEASURE_FUNC "measure"
 #define INITIALISE_FUNC "initialise_state"
 
@@ -15,21 +15,50 @@
 #include <math.h>
 
 const float sqrt_2 = 1.414214;
-const float not[8] = {0,0,1,0,1,0,0,0};
-const float hadamard[8] = {1/sqrt_2,0,1/sqrt_2,0,1/sqrt_2,0,-1/sqrt_2,0};
+float x[8] = {0,0,1,0,1,0,0,0};
+float z[8] = {1,0,0,0,0,0,1,0};
+float hadamard[8] = {1/sqrt_2,0,1/sqrt_2,0,1/sqrt_2,0,-1/sqrt_2,0};
 
-int int_to_int(int k) {
-    return (k == 0 || k == 1 ? k : ((k % 2) + 10 * int_to_int(k / 2)));
+/**
+ * Sets a given array of size n to the binary representation of k
+ * @param k An integer to be converted into binary
+ * @param n The size of the array containing the binary representation
+ * @param array The array in which to store the binary representation
+ */
+void int_to_bin(int k, int n, char *array) {
+    for(int i=n-1; i>=0; i--)
+        if(k >= (int) pow((double) 2, (double) i)) {
+            array[i] = '1';
+            k -= (int) pow((double) 2, (double) i);
+        } else
+            array[i] = '0';
+
+    array[n] = '\0';
 }
-
+/**
+ * Prints the results of a given simulation.
+ * To chose the threshold for which to print a value, set simulation's epsilon value.
+ * @param simulation The current simulation object to print from
+ */
 void print_results(Simulation *simulation)
 {
-    printf("Probabilities:\n");
+    char array[(int) log2(simulation->num_amp)+1];
+
     for(int i=0; i<simulation->num_amp; i++)
-        if(simulation->probabilities[i] != 0)
-            printf("%04d: %f %%\n", int_to_int(i), simulation->probabilities[i]*100);
+        if(simulation->probabilities[i] >= simulation->epsilon) {
+            int_to_bin(i, log2(simulation->num_amp), array);
+            //printf("%s: %f %%\n", array, simulation->probabilities[i]*100);
+            printf("%s\n", array);
+        }
 }
 
+/**
+ * Reads the state vector from the GPU'memory and stores it in the state array.
+ * Useful for debugging quantum algorithms.
+ * @param state An array to hold the state buffer, must be at least of size
+ * simulation->num_amplitudes * 2
+ * @param simulation The simulation to test
+ */
 void test_state_vector(float *state, Simulation *simulation)
 {
     cl_int error;
@@ -45,22 +74,53 @@ void test_state_vector(float *state, Simulation *simulation)
     return;
 }
 
+/**
+ * Deallocates all resources associated with a simulation.
+ * Run before exiting program to avoid memory leaks.
+ * @param simulation A simulation object which is no longer in use
+ */
 void deallocate_resources(Simulation *simulation)
 {
-    free(simulation->state_vector);
-    free(simulation->probabilities);
-    clReleaseKernel(simulation->apply_gate_kernel);
-    clReleaseKernel(simulation->apply_controlled_gate_kernel);
-    clReleaseKernel(simulation->measure_kernel);
-    clReleaseKernel(simulation->initialise_state_kernel);
-    clReleaseCommandQueue(simulation->queue);
-    clReleaseProgram(simulation->program);
-    clReleaseContext(simulation->context);
+    if(simulation->apply_gate_kernel)
+        clReleaseKernel(simulation->apply_gate_kernel);
+    
+    if(simulation->apply_controlled_gate_kernel)
+        clReleaseKernel(simulation->apply_controlled_gate_kernel);
+    
+    if(simulation->apply_double_controlled_gate_kernel)
+        clReleaseKernel(simulation->apply_double_controlled_gate_kernel);
+
+    if(simulation->measure_kernel)
+        clReleaseKernel(simulation->measure_kernel);
+
+    if(simulation->initialise_state_kernel)
+        clReleaseKernel(simulation->initialise_state_kernel);
+
+    if(simulation->queue)
+        clReleaseCommandQueue(simulation->queue);
+
+    if(clReleaseProgram(simulation->program))
+        clReleaseProgram(simulation->program);
+
+    if(clReleaseContext(simulation->context))
+        clReleaseContext(simulation->context);
+
+    if(simulation->state_vector)
+        free(simulation->state_vector);
+
+    if(simulation->probabilities)
+        free(simulation->probabilities);
+    
     free(simulation);
     
     return;
 }
 
+/**
+ * Meaures all registers of a simulation and stores the probabilities of a
+ * qubit collapsing to each state in the simulation's probabilities array.
+ * @param simulation The simulation to be measured
+ */
 void measure(Simulation *simulation)
 {
     const size_t num_op = simulation->num_amp;
@@ -86,8 +146,20 @@ void measure(Simulation *simulation)
     return;
 }
 
-void apply_controlled_controlled_gate(int target, int control_1, int control_2,
-    float *gate, Simulation *simulation)
+/**
+ * Sets kernel arguments and queues the apply_double_controlled_gate() kernel.
+ * May accept any gate type and applies the doubly controlled version of the
+ * gate on the specified target and control qubits. May be used with the
+ * NOT gate to apply a toffoli gate.
+ * @param target The target qubit for the gate
+ * @param control_1 The first control qubit for the gate
+ * @param control_2 The seccond control qubit for the gate
+ * @param gate An array containing the matrix of the gate to be applied on the
+ * target qubit
+ * @param simulation The simulation on which to apply the gate
+ */
+void apply_double_controlled_gate(int target, int control_1, int control_2,
+    float gate[8], Simulation *simulation)
 {
     cl_int error;
     float *a, *b, *c, *d;
@@ -110,58 +182,59 @@ void apply_controlled_controlled_gate(int target, int control_1, int control_2,
     d[1] = gate[7];
     
     // Set kernel arguments for apply_controlled_gate
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         1, sizeof(int), &control_1);
 
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         2, sizeof(int), &control_2);
     
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's controlled argument");
+        perror("Couldn't set apply_double_controlled_gate's controlled argument");
         exit(1);
     }
     
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         3, sizeof(int), &target);
     
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's target argument");
+        perror("Couldn't set apply_double_controlled_gate's target argument");
         exit(1);
     }
 
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         4, sizeof(float)*2, a);
     
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's a argument");
+        perror("Couldn't set apply_double_controlled_gate's a argument");
         exit(1);
     }
 
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         5, sizeof(float)*2, b);
     
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's b argument");
+        perror("Couldn't set apply_double_controlled_gate's b argument");
         exit(1);
     }
 
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         6, sizeof(float)*2, c);
     
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's c argument");
+        perror("Couldn't set apply_double_controlled_gate's c argument");
         exit(1);
     }
 
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 
         7, sizeof(float)*2, d);
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's d argument");
+        perror("Couldn't set apply_double_controlled_gate's d argument");
         exit(1);
     }
 
+    // queue the kernel
     clEnqueueNDRangeKernel(simulation->queue, 
-        simulation->apply_controlled_controlled_gate_kernel, 
+        simulation->apply_double_controlled_gate_kernel, 
         1, NULL, &num_op, NULL, 0, NULL, NULL);
 
     free(a);
@@ -170,7 +243,18 @@ void apply_controlled_controlled_gate(int target, int control_1, int control_2,
     free(d);
 }
 
-void apply_controlled_gate(int target, int controlled, float *gate,
+/**
+ * Sets kernel arguments and queues the apply_controlled_gate() kernel.
+ * May accept any gate type and applies the controlled version of the
+ * gate on the specified target and control qubits. May be used with the
+ * NOT gate to apply a c-not gate for example.
+ * @param target The target qubit for the gate
+ * @param controlled The control qubit for the gate
+ * @param gate An array containing the matrix of the gate to be applied on the
+ * target qubit
+ * @param simulation The simulation on which to apply the gate
+ */
+void apply_controlled_gate(int target, int controlled, float gate[8],
     Simulation *simulation)
 {
     cl_int error;
@@ -241,6 +325,7 @@ void apply_controlled_gate(int target, int controlled, float *gate,
         exit(1);
     }
 
+    // queue kerenel
     clEnqueueNDRangeKernel(simulation->queue, 
         simulation->apply_controlled_gate_kernel, 
         1, NULL, &num_op, NULL, 0, NULL, NULL);
@@ -251,7 +336,15 @@ void apply_controlled_gate(int target, int controlled, float *gate,
     free(d);
 }
 
-void apply_gate(int target, float *gate, Simulation *simulation)
+/**
+ * Sets kernel arguments and queues the apply_gate() kernel.
+ * May accept any gate type and applies the gate on the specified target qubit.
+ * @param target The target qubit for the gate
+ * @param gate An array containing the matrix of the gate to be applied on the
+ * target qubit
+ * @param simulation The simulation on which to apply the gate
+ */
+void apply_gate(int target, float gate[8], Simulation *simulation)
 {
     cl_int error;
     float *a, *b, *c, *d;
@@ -315,13 +408,18 @@ void apply_gate(int target, float *gate, Simulation *simulation)
     return;
 }
 
+/**
+ * Call to initialise qubits.
+ * Creates a state vector of appropriate size to store the simulation's
+ * amplitudes and sets it as a kernel argument to all required kernels
+ * @param num_qubits The number of qubits to initialise
+ * @param simulation The simulation object to initialise
+ */
 void initialise_qubits(int num_qubits, Simulation *simulation)
 {
     cl_int error;
 
-    // Check the number of qubits is appropriate
-    // Max seems to be 13 but should be 27 accoding to device
-    // up to 12 qubits can be handled with a single work item per amplitude
+    // Check the GPU has enough global memory for the number of qubits
     if(num_qubits > log2(simulation->global_mem_size/8) | num_qubits < 0) {
         printf("Invalid number of qubits: Maximum %d\n",
             (int) log2(simulation->global_mem_size/8));
@@ -367,10 +465,10 @@ void initialise_qubits(int num_qubits, Simulation *simulation)
         exit(1);
     }
 
-    error = clSetKernelArg(simulation->apply_controlled_controlled_gate_kernel, 0,
+    error = clSetKernelArg(simulation->apply_double_controlled_gate_kernel, 0,
         sizeof(cl_mem), &simulation->state_vector_buffer);
     if(error < 0) {
-        perror("Couldn't set apply_controlled_controlled_gate's state_vector argument");
+        perror("Couldn't set apply_double_controlled_gate's state_vector argument");
         exit(1);
     }
 
@@ -397,7 +495,13 @@ void initialise_qubits(int num_qubits, Simulation *simulation)
         exit(1);
     }
 }
-
+/**
+ * @brief Set the up simulation object.
+ * Complies the OpenCL program, creates all kernel function, defines
+ * context, creates command queue, sets known kernel arguments and
+ * verifies GPU capabilities.
+ * @return simulation object containing all OpenCL objects
+ */
 Simulation *set_up_simulation()
 {
     // Data structures
@@ -439,7 +543,7 @@ Simulation *set_up_simulation()
         perror("Couldn't access GPU's max work item dimensions");
         exit(1);
     }
-    //printf("Maximum work item dimensions: %u\n", max_work_item_dims);
+    // printf("Maximum work item dimensions: %u\n", max_work_item_dims);
 
     // Check the GPU's maximum number of work group size
     error = clGetDeviceInfo(simulation->device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
@@ -448,7 +552,7 @@ Simulation *set_up_simulation()
         perror("Couldn't access GPU's max work group size");
         exit(1);
     }
-    //printf("Maximum work group size: %lu\n", max_work_group_size);
+    // printf("Maximum work group size: %lu\n", max_work_group_size);
 
     // Check the GPU's maximum number of work item sizes
     max_work_item_size = (size_t *) malloc(max_work_item_dims*sizeof(size_t));
@@ -458,8 +562,8 @@ Simulation *set_up_simulation()
         perror("Couldn't access GPU's max work item size");
         exit(1);
     }
-    //for(int i=0; i<max_work_item_dims; i++)
-        //printf("Maximum work item %d size: %lu\n", i, max_work_item_size[i]);
+    // for(int i=0; i<max_work_item_dims; i++)
+    //     printf("Maximum work item %d size: %lu\n", i, max_work_item_size[i]);
     free(max_work_item_size);
 
     // Check the GPU's number of compute units
@@ -478,7 +582,7 @@ Simulation *set_up_simulation()
         perror("Couldn't access GPU's global memory size");
         exit(1);
     }
-    //printf("Global memory size: %llu bytes\n", global_mem_size);
+    //printf("Global memory size: %llu bytes\n", simulation->global_mem_size);
 
     // Create context
     simulation->context = clCreateContext(NULL, 1, &simulation->device, NULL, NULL, &error);
@@ -546,8 +650,8 @@ Simulation *set_up_simulation()
         exit(1);
     }
 
-    // Create kernel for the apply_controlled_controlled_gate function
-    simulation->apply_controlled_controlled_gate_kernel = 
+    // Create kernel for the apply_double_controlled_gate function
+    simulation->apply_double_controlled_gate_kernel = 
         clCreateKernel(simulation->program, APPLY_CCGATE_FUNC, &error);
     if(error < 0) {
         perror("Couldn't create the apply controlled controlled gate kernel");
@@ -574,6 +678,9 @@ Simulation *set_up_simulation()
         perror("Couldn't create the command queue");
         exit(1);
     }
+
+    // Initialise epsilon
+    simulation->epsilon = 0;
 
     return simulation;
 }

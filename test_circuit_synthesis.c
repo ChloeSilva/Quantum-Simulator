@@ -82,6 +82,58 @@ void test_bin_to_int()
     printf("Pass\n");
 }
 
+void test_set_binary()
+{
+    printf("Testing set_binary: ");
+
+    // given
+    int x = 6;
+    const int x_size = 6;
+    int x_array[x_size];
+    
+    int y = 27;
+    const int y_size = 5;
+    int y_array[y_size];
+
+    // when
+    set_binary(x, x_size, x_array);
+    set_binary(y, y_size, y_array);
+
+    // then
+    int x_array_test[x_size] = {0,1,1,0,0,0};
+    int y_array_test[y_size] = {1,1,0,1,1};
+
+    for(int i=0; i<x_size; i++)
+        assert(x_array[i] == x_array_test[i]);
+
+    for(int i=0; i<y_size; i++)
+        assert(y_array[i] == y_array_test[i]);
+
+    printf("Pass\n");
+}
+
+void test_sum()
+{
+    printf("Testing sum: ");
+
+    // given
+    const int x_size = 6;
+    int x_array[x_size] = {0,1,1,0,0,0};
+    
+    const int y_size = 5;
+    int y_array[y_size] = {1,1,0,1,1};
+
+    // when
+    int x = get_sum(x_array, x_size);
+    int y = get_sum(y_array, y_size);
+
+    // then
+    assert(x == 2);
+    assert(y == 4);
+
+    printf("Pass\n");
+}
+
 void test_synthesise_linear_circuit()
 {
     printf("Testing synthesise_linear_circuit: ");
@@ -114,7 +166,7 @@ void test_synthesise_linear_circuit()
 
 void test_get_biadjacency_matrix()
 {
-    printf("Testing synthesise_linear_circuit: ");
+    printf("Testing get_biadjacency_matrix: ");
 
     // given
     ZXGraph *graph = initialise_graph(4);
@@ -187,6 +239,43 @@ void test_get_biadjacency_matrix()
     printf("Pass\n");
 }
 
+void test_synthesise_multi_cnot()
+{
+    printf("Testing synthesise_multi_cnot: ");
+
+    // given
+    int n = 3;
+
+    // when
+    int *circuit = synthesise_multi_cnot(n);
+
+    // then
+    int circuit_test[51] = {0,3,0,
+                            1,3,0,
+                            0,1,1,
+                            1,3,1,
+                            0,1,1,
+                            2,3,0,
+                            0,2,1,
+                            2,3,1,
+                            0,2,1,
+                            1,2,1,
+                            2,3,1,
+                            1,2,1,
+                            0,2,0,
+                            1,2,0,
+                            2,3,0,
+                            0,2,0,
+                            1,2,0};
+
+    for(int i=0; circuit[i] != n+1; i++)
+        assert(circuit[i] == circuit_test[i]);
+
+    free(circuit);
+
+    printf("Pass\n");
+}
+
 int main()
 {
     printf("\033[1;32m");
@@ -194,8 +283,11 @@ int main()
     test_reverse();
     test_transpose();
     test_bin_to_int();
+    test_set_binary();
+    test_sum();
     test_synthesise_linear_circuit();
     test_get_biadjacency_matrix();
+    test_synthesise_multi_cnot();
 
     printf("\033[0m");
 }

@@ -28,8 +28,8 @@ void test_circuit_to_zx_graph()
     Circuit *circuit = initialise_circuit(3);
     add_gate(HADAMARD, 0, circuit);
     add_gate(HADAMARD, 1, circuit);
-    add_controlled_gate(NOT, 1, 2, circuit);
-    add_gate(NOT, 2, circuit);
+    add_controlled_gate(X, 1, 2, circuit);
+    add_gate(X, 2, circuit);
 
     // when
     ZXGraph *graph = circuit_to_zx_graph(circuit);
@@ -131,8 +131,8 @@ void test_remove_z_spiders()
 
     // given
     Circuit *circuit = initialise_circuit(2);
-    add_controlled_gate(NOT, 0, 1, circuit);
-    add_gate(NOT, 1, circuit);
+    add_controlled_gate(X, 0, 1, circuit);
+    add_gate(X, 1, circuit);
     
     ZXGraph *graph = circuit_to_zx_graph(circuit);   
 
@@ -247,8 +247,8 @@ void test_add_hadamard_edges()
     Circuit *circuit = initialise_circuit(2);
     add_gate(HADAMARD, 0, circuit);
     add_gate(HADAMARD, 0, circuit);
-    add_gate(NOT, 1, circuit);
-    add_gate(NOT, 1, circuit);
+    add_gate(X, 1, circuit);
+    add_gate(X, 1, circuit);
 
     ZXGraph *graph = circuit_to_zx_graph(circuit);  
 
@@ -1149,43 +1149,43 @@ void test_add_cnot_layer()
     assert(circuit->num_qubits == 4);
 
     // test gate 1
-    assert(gate_1->type == NOT);
+    assert(gate_1->type == X);
     assert(gate_1->isControlled);
     assert(gate_1->target == 0);
     assert(gate_1->control == 2);
 
     // test gate 2
-    assert(gate_2->type == NOT);
+    assert(gate_2->type == X);
     assert(gate_2->isControlled);
     assert(gate_2->target == 1);
     assert(gate_2->control == 2);
     
     // test gate 3
-    assert(gate_3->type == NOT);
+    assert(gate_3->type == X);
     assert(gate_3->isControlled);
     assert(gate_3->target == 3);
     assert(gate_3->control == 2);
 
     // test gate 4
-    assert(gate_4->type == NOT);
+    assert(gate_4->type == X);
     assert(gate_4->isControlled);
     assert(gate_4->target == 2);
     assert(gate_4->control == 1);
 
     // test gate 5
-    assert(gate_5->type == NOT);
+    assert(gate_5->type == X);
     assert(gate_5->isControlled);
     assert(gate_5->target == 1);
     assert(gate_5->control == 2);
 
     // test gate 6
-    assert(gate_6->type == NOT);
+    assert(gate_6->type == X);
     assert(gate_6->isControlled);
     assert(gate_6->target == 2);
     assert(gate_6->control == 0);
 
     // test gate 7
-    assert(gate_7->type == NOT);
+    assert(gate_7->type == X);
     assert(gate_7->isControlled);
     assert(gate_7->target == 3);
     assert(gate_7->control == 2);
@@ -1256,9 +1256,9 @@ void test_add_hadamard_layer()
     printf("Pass\n");
 }
 
-void test_extract_clifford()
+void test_extract_circuit()
 {
-    printf("Testing extract_clifford: ");
+    printf("Testing extract_circuit: ");
 
     // given
     ZXGraph *graph = initialise_graph(4);
@@ -1321,7 +1321,7 @@ void test_extract_clifford()
     insert_node(hadamard_10, right_spider_0, right_spider_3);
 
     // when
-    Circuit *circuit = extract_clifford(graph);
+    Circuit *circuit = extract_circuit(graph);
 
     // then
     TimeStep *step = circuit->steps->first;
@@ -1358,43 +1358,43 @@ void test_extract_clifford()
     assert(gate_0->control == 2);
 
     // test gate 1
-    assert(gate_1->type == NOT);
+    assert(gate_1->type == X);
     assert(gate_1->isControlled);
     assert(gate_1->target == 0);
     assert(gate_1->control == 2);
 
     // test gate 2
-    assert(gate_2->type == NOT);
+    assert(gate_2->type == X);
     assert(gate_2->isControlled);
     assert(gate_2->target == 1);
     assert(gate_2->control == 2);
 
     // test gate 3
-    assert(gate_3->type == NOT);
+    assert(gate_3->type == X);
     assert(gate_3->isControlled);
     assert(gate_3->target == 3);
     assert(gate_3->control == 2);
 
     // test gate 4
-    assert(gate_4->type == NOT);
+    assert(gate_4->type == X);
     assert(gate_4->isControlled);
     assert(gate_4->target == 2);
     assert(gate_4->control == 1);
 
     // test gate 5
-    assert(gate_5->type == NOT);
+    assert(gate_5->type == X);
     assert(gate_5->isControlled);
     assert(gate_5->target == 1);
     assert(gate_5->control == 2);
 
     // test gate 6
-    assert(gate_6->type == NOT);
+    assert(gate_6->type == X);
     assert(gate_6->isControlled);
     assert(gate_6->target == 2);
     assert(gate_6->control == 0);
 
     // test gate 7
-    assert(gate_7->type == NOT);
+    assert(gate_7->type == X);
     assert(gate_7->isControlled);
     assert(gate_7->target == 3);
     assert(gate_7->control == 2);
@@ -1453,7 +1453,7 @@ int main()
     test_add_cz_layer();
     test_add_cnot_layer();
     test_add_hadamard_layer();
-    test_extract_clifford();
+    test_extract_circuit();
 
     printf("\033[0m");
 }
